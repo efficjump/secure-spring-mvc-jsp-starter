@@ -1,0 +1,161 @@
+spring:
+  application:
+    name: ${APP_NAME:secure-mvc-starter}
+  datasource:
+    url: ${DB_URL:jdbc:mariadb://localhost:3306/webapp}
+    username: ${DB_USERNAME:webapp}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      pool-name: ${DB_POOL_NAME:app-pool}
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:10000}
+      validation-timeout: ${DB_VALIDATION_TIMEOUT_MS:5000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1500000}
+      leak-detection-threshold: ${DB_LEAK_DETECTION_THRESHOLD:0}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+          batch_size: ${DB_HIBERNATE_BATCH_SIZE:25}
+        order_inserts: true
+        order_updates: true
+        generate_statistics: ${APP_HIBERNATE_STATISTICS:false}
+        format_sql: ${APP_SQL_FORMAT:true}
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  web:
+    error:
+      whitelabel:
+        enabled: false
+  lifecycle:
+    timeout-per-shutdown-phase: ${APP_SHUTDOWN_TIMEOUT:20s}
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:NONE}
+  max-http-request-header-size: ${SERVER_MAX_HEADER_SIZE:16KB}
+  error:
+    include-binding-errors: never
+    include-exception: false
+    include-message: never
+    include-stacktrace: never
+    whitelabel:
+      enabled: false
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    session:
+      timeout: ${SESSION_TIMEOUT:30m}
+      tracking-modes: cookie
+      cookie:
+        name: ${SESSION_COOKIE_NAME:SESSION}
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:true}
+        same-site: ${SESSION_COOKIE_SAME_SITE:lax}
+  tomcat:
+    max-parameter-count: ${SERVER_MAX_PARAMETER_COUNT:1000}
+    max-part-count: ${SERVER_MAX_PART_COUNT:50}
+    max-http-form-post-size: ${SERVER_MAX_FORM_POST_SIZE:64KB}
+    max-swallow-size: ${SERVER_MAX_SWALLOW_SIZE:2MB}
+    connection-timeout: ${SERVER_CONNECTION_TIMEOUT:20s}
+
+management:
+  endpoints:
+    web:
+      base-path: /internal/actuator
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics}
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+    env:
+      show-values: never
+    configprops:
+      show-values: never
+
+app:
+  security:
+    password:
+      algorithm: ${APP_PASSWORD_ALGORITHM:argon2}
+      min-length: ${APP_PASSWORD_MIN_LENGTH:12}
+      max-length: ${APP_PASSWORD_MAX_LENGTH:128}
+      argon2:
+        salt-length: ${APP_ARGON2_SALT_LENGTH:16}
+        hash-length: ${APP_ARGON2_HASH_LENGTH:32}
+        parallelism: ${APP_ARGON2_PARALLELISM:1}
+        memory-kib: ${APP_ARGON2_MEMORY_KIB:19456}
+        iterations: ${APP_ARGON2_ITERATIONS:2}
+      bcrypt-strength: ${APP_BCRYPT_STRENGTH:12}
+    login-protection:
+      attempts-per-window: ${APP_LOGIN_ATTEMPTS_PER_WINDOW:8}
+      ip-attempts-per-window: ${APP_LOGIN_IP_ATTEMPTS_PER_WINDOW:40}
+      window: ${APP_LOGIN_ATTEMPT_WINDOW:15m}
+      block-duration: ${APP_LOGIN_BLOCK_DURATION:15m}
+      max-tracked-keys: ${APP_LOGIN_MAX_TRACKED_KEYS:100000}
+      account-lock-threshold: ${APP_ACCOUNT_LOCK_THRESHOLD:5}
+      account-lock-duration: ${APP_ACCOUNT_LOCK_DURATION:15m}
+    registration:
+      enabled: ${APP_REGISTRATION_ENABLED:false}
+    session:
+      maximum-concurrent-sessions: ${APP_MAX_CONCURRENT_SESSIONS:2}
+      metadata-max-entries: ${APP_SESSION_METADATA_MAX_ENTRIES:10000}
+    headers:
+      content-security-policy: ${APP_CONTENT_SECURITY_POLICY:default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'}
+      permissions-policy: ${APP_PERMISSIONS_POLICY:camera=(), microphone=(), geolocation=(), payment=(), usb=()}
+      referrer-policy: ${APP_REFERRER_POLICY:strict-origin-when-cross-origin}
+      frame-options: ${APP_FRAME_OPTIONS:SAMEORIGIN}
+      hsts-max-age: ${APP_HSTS_MAX_AGE:365d}
+      hsts-include-subdomains: ${APP_HSTS_INCLUDE_SUBDOMAINS:true}
+      hsts-preload: ${APP_HSTS_PRELOAD:false}
+  bootstrap:
+    admin:
+      enabled: ${APP_BOOTSTRAP_ADMIN_ENABLED:false}
+      username: ${APP_BOOTSTRAP_ADMIN_USERNAME:}
+      email: ${APP_BOOTSTRAP_ADMIN_EMAIL:}
+      password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+  admin:
+    page-size: ${APP_ADMIN_PAGE_SIZE:25}
+  workspace:
+    max-tabs: ${APP_WORKSPACE_MAX_TABS:12}
+    default-menu-key: ${APP_WORKSPACE_DEFAULT_MENU_KEY:dashboard}
+    storage-key: ${APP_WORKSPACE_STORAGE_KEY:secure-mvc-workspace}
+    reserved-paths: ${APP_WORKSPACE_RESERVED_PATHS:/workspace,/login,/logout,/register,/error,/assets,/internal}
+  logging:
+    directory: ${APP_LOG_DIRECTORY:logs}
+    max-file-size: ${APP_LOG_MAX_FILE_SIZE:20MB}
+    max-history: ${APP_LOG_MAX_HISTORY:30}
+    total-size-cap: ${APP_LOG_TOTAL_SIZE_CAP:2GB}
+    sql:
+      level: ${APP_SQL_LOG_LEVEL:OFF}
+      bind-level: ${APP_SQL_BIND_LOG_LEVEL:OFF}
+      driver-level: ${APP_DB_DRIVER_LOG_LEVEL:OFF}
+
+logging:
+  level:
+    root: ${APP_ROOT_LOG_LEVEL:INFO}
+    com.example.webstarter: ${APP_PACKAGE_LOG_LEVEL:INFO}
+    org.springframework.security: ${APP_SPRING_SECURITY_LOG_LEVEL:INFO}
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR

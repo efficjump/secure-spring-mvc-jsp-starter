@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${SESSION_COOKIE_SECURE:true}
+
+app:
+  security:
+    registration:
+      enabled: ${APP_REGISTRATION_ENABLED:false}
+  bootstrap:
+    admin:
+      enabled: ${APP_BOOTSTRAP_ADMIN_ENABLED:false}
+  logging:
+    sql:
+      level: ${APP_SQL_LOG_LEVEL:OFF}
+      bind-level: ${APP_SQL_BIND_LOG_LEVEL:OFF}
+      driver-level: ${APP_DB_DRIVER_LOG_LEVEL:OFF}
+

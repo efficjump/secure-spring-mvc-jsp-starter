@@ -1,0 +1,13 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+app:
+  logging:
+    sql:
+      level: ${APP_SQL_LOG_LEVEL:DEBUG}
+      bind-level: ${APP_SQL_BIND_LOG_LEVEL:OFF}
+      driver-level: ${APP_DB_DRIVER_LOG_LEVEL:OFF}
+

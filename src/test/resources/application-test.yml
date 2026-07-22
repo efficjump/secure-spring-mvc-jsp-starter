@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:securemvc;MODE=MariaDB;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+app:
+  bootstrap:
+    admin:
+      enabled: false
+  logging:
+    sql:
+      level: OFF
+      bind-level: OFF
+      driver-level: OFF
+

@@ -1,0 +1,50 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><c:out value="${pageTitle}"/> · <spring:message code="app.name"/></title>
+    <c:url var="stylesheetUrl" value="/assets/css/app.css"/>
+    <c:url var="modernThemeUrl" value="/assets/css/theme-modern.css"/>
+    <link rel="stylesheet" href="${stylesheetUrl}">
+    <link rel="stylesheet" href="${modernThemeUrl}">
+</head>
+<body class="<c:choose><c:when test="${immersivePage}">immersive-view</c:when><c:when test="${embeddedView}">embedded-view</c:when><c:otherwise>standard-view</c:otherwise></c:choose>">
+<a class="skip-link" href="#main-content">본문으로 바로가기</a>
+<c:if test="${not embeddedView and not immersivePage}">
+    <header class="site-header">
+        <div class="shell header-inner">
+            <c:url var="homeUrl" value="/"/>
+            <a class="brand" href="${homeUrl}"><spring:message code="app.name"/></a>
+            <nav class="primary-nav" aria-label="주요 메뉴">
+                <a href="${homeUrl}"><spring:message code="nav.home"/></a>
+                <sec:authorize access="isAuthenticated()">
+                    <c:url var="workspaceUrl" value="/workspace"/>
+                    <a href="${workspaceUrl}"><spring:message code="nav.workspace"/></a>
+                </sec:authorize>
+            </nav>
+            <div class="session-actions">
+                <sec:authorize access="isAnonymous()">
+                    <c:url var="loginUrl" value="/login"/>
+                    <a class="button button-quiet" href="${loginUrl}"><spring:message code="nav.login"/></a>
+                    <c:if test="${registrationEnabled}">
+                        <c:url var="registerUrl" value="/register"/>
+                        <a class="button" href="${registerUrl}"><spring:message code="nav.register"/></a>
+                    </c:if>
+                </sec:authorize>
+                <sec:authorize access="isAuthenticated()">
+                    <c:url var="logoutUrl" value="/logout"/>
+                    <form class="inline-form" action="${logoutUrl}" method="post">
+                        <sec:csrfInput/>
+                        <button class="button button-quiet" type="submit"><spring:message code="nav.logout"/></button>
+                    </form>
+                </sec:authorize>
+            </div>
+        </div>
+    </header>
+</c:if>
+<main id="main-content" class="<c:choose><c:when test="${immersivePage}">immersive-content</c:when><c:when test="${embeddedView}">embedded-content</c:when><c:otherwise>shell page-content</c:otherwise></c:choose>">

@@ -1,0 +1,11 @@
+<%@ page pageEncoding="UTF-8" %>
+</main>
+<c:if test="${not embeddedView and not immersivePage}">
+    <footer class="site-footer">
+        <div class="shell">
+            <p>Spring MVC · JSP · MariaDB 보안 기준 프로젝트</p>
+        </div>
+    </footer>
+</c:if>
+</body>
+</html>

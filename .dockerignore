@@ -1,0 +1,12 @@
+.env
+.git/
+.idea/
+.vscode/
+.DS_Store
+.m2-cache/
+logs/
+outputs/
+target/
+work/
+*.iml
+
