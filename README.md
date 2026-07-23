@@ -1,3 +1,5 @@
+**English** | [한국어](README.ko.md)
+
 # Secure Spring MVC JSP Starter
 
 Secure Spring MVC JSP Starter is a security-focused baseline for business applications built with Spring MVC, JSP, and MariaDB. It goes beyond a login example by combining account lockout, session revocation, administrator safeguards, security auditing, SQL observation, container hardening, English/Korean localization, and a multi-tab workspace.
