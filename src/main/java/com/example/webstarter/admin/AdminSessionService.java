@@ -50,15 +50,15 @@ public class AdminSessionService {
 
     public String terminate(String terminationToken, String currentSessionId) {
         if (terminationToken == null || terminationToken.isBlank()) {
-            throw new SessionOperationException("종료할 세션을 찾을 수 없습니다.");
+            throw new SessionOperationException("admin.session.error.notFound");
         }
         SessionInformation session = findByTerminationToken(terminationToken)
-                .orElseThrow(() -> new SessionOperationException("세션이 이미 종료되었거나 존재하지 않습니다."));
+                .orElseThrow(() -> new SessionOperationException("admin.session.error.notFound"));
         if (session.getSessionId().equals(currentSessionId)) {
-            throw new SessionOperationException("현재 사용 중인 세션은 이 화면에서 종료할 수 없습니다.");
+            throw new SessionOperationException("admin.session.error.current");
         }
         if (session.isExpired()) {
-            throw new SessionOperationException("세션이 이미 종료되었거나 존재하지 않습니다.");
+            throw new SessionOperationException("admin.session.error.notFound");
         }
         String username = session.getPrincipal() instanceof UserDetails userDetails
                 ? userDetails.getUsername()

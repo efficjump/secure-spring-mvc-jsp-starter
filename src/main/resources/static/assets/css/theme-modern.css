@@ -117,6 +117,16 @@ a:focus-visible {
   box-shadow: var(--shadow-xs);
 }
 
+.language-switcher {
+  background: #f2f3f7;
+  border-color: #e2e4eb;
+}
+
+.language-option.is-active {
+  color: var(--brand-strong);
+  box-shadow: var(--shadow-xs);
+}
+
 .text-button {
   padding: 4px 2px;
   color: var(--brand-strong);
@@ -943,6 +953,6 @@ td strong {
   }
 
   .auth-panel {
-    padding: 42px 24px;
+    padding: 82px 24px 42px;
   }
 }

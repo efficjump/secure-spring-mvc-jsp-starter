@@ -1,6 +1,6 @@
 # Secure Spring MVC JSP Starter
 
-Spring MVC, JSP, MariaDB 조합을 새 프로젝트에서 반복해서 사용할 수 있도록 만든 보안 중심 시작점입니다. 단순한 로그인 예제를 넘어 계정 잠금, 세션 폐기, 관리자 안전장치, 보안 감사, SQL·슬로 쿼리 관찰, 운영 프로파일과 컨테이너 제한, 다중 탭 업무 셸까지 하나의 기준으로 묶었습니다.
+Spring MVC, JSP, MariaDB 조합을 새 프로젝트에서 반복해서 사용할 수 있도록 만든 보안 중심 시작점입니다. 단순한 로그인 예제를 넘어 계정 잠금, 세션 폐기, 관리자 안전장치, 보안 감사, SQL·슬로 쿼리 관찰, 운영 프로파일과 컨테이너 제한, 한영 전환, 다중 탭 업무 셸까지 하나의 기준으로 묶었습니다.
 
 현재 기준 버전은 Java 21, Spring Boot 4.1.0, MariaDB 12.3.2 LTS이며 애플리케이션은 실행 가능한 WAR로 패키징합니다. Spring Boot 공식 문서상 JSP는 실행 가능한 JAR에서 지원되지 않기 때문에 WAR 구조를 유지해야 합니다.
 
@@ -17,6 +17,7 @@ Spring MVC, JSP, MariaDB 조합을 새 프로젝트에서 반복해서 사용할
 | 보안 | Spring Security, Argon2, CSRF, CSP, 세션 제한, 계정 잠금, 감사 로그 |
 | 관리 | 사용자 계정, 로그인 이력, 활성 세션, 동적 메뉴, 비밀번호 변경 |
 | 업무 UI | 전체 화면 셸, 권한 기반 탐색, 동일 출처 다중 탭, 반응형 레이아웃 |
+| 다국어 | 한국어·영어 전체 화면 번역, 브라우저 언어 감지, 보안 쿠키 기반 선택 유지 |
 | 운영 | Docker Compose, health probe, 구조화된 로그 분리, SQL·슬로 쿼리 관찰 |
 | 공급망 | 제3자 라이선스 보고서, CycloneDX SBOM, 의존성 자동 업데이트 |
 
@@ -36,12 +37,27 @@ Spring MVC, JSP, MariaDB 조합을 새 프로젝트에서 반복해서 사용할
 
 업무 화면은 URL을 직접 연결하는 메뉴 정의를 DB에서 읽어 오며, 서버가 허용한 내부 경로만 탭으로 엽니다. 탭별 상태는 브라우저 세션 범위에 남아 있어 목록과 편집 화면을 오가더라도 작업 맥락을 유지할 수 있습니다.
 
+### 다국어와 언어 전환
+
+- 홈·로그인·가입·오류 화면과 업무 셸, 모든 기본 관리 화면을 한국어와 영어로 제공
+- 첫 방문에는 허용 언어 안에서 브라우저 `Accept-Language`를 적용하고 일치 항목이 없으면 설정된 기본 언어 사용
+- 헤더, 로그인 패널과 업무 셸 상단의 언어 선택기로 현재 화면에서 즉시 전환
+- 선택 언어를 `HttpOnly`, `SameSite=Lax` 쿠키에 보관하며 운영 HTTPS에서는 `Secure` 적용
+- 언어 변경 후에도 로그인 이력 검색 조건과 페이지 같은 안전한 내부 쿼리 문자열 유지
+- 외부 URL, 경로 이동, 프로토콜 상대 URL을 반환 경로로 사용할 수 없도록 리다이렉트 검증
+- 기본 DB 메뉴는 `navigation.menu.<menu-key>.label/group` 규칙으로 번역하고 사용자 정의 메뉴는 DB 원문으로 안전하게 대체
+- 허용 언어, 기본 언어, 쿠키 이름·수명·보안 속성과 브라우저 언어 반영 여부를 모두 환경변수로 설정
+
+새 언어를 추가하려면 `messages_<언어태그>.properties`를 만들고 `APP_I18N_SUPPORTED_LOCALES`에 BCP 47 태그를 추가합니다. `MessageBundleConsistencyTest`가 한국어·영어 키 누락과 동적 열거형 메시지 누락을 검사하므로, 기존 번들을 확장할 때도 같은 방식의 일관성 테스트를 유지하는 것이 좋습니다.
+
+![영문 로그인 화면과 언어 선택기](docs/images/login-en.png)
+
 ### 기본 관리 화면
 
 | 화면 | 주요 기능 | 접근 권한 |
 |---|---|---|
 | 업무 현황 | 계정·로그인·세션 지표와 최근 보안 이벤트 확인 | 사용자 |
-| 사용자 계정 | 계정 생성, 역할·상태 변경, 잠금 해제 | 관리자 |
+| 사용자 계정 | 계정 조회, 역할·상태 변경, 잠금 해제 | 관리자 |
 | 로그인 이력 | 성공·실패 결과, 요청 ID, 시각과 원격 주소 조회 | 관리자 |
 | 세션 관리 | 활성 세션 조회와 선택 세션 강제 종료 | 관리자 |
 | 메뉴 관리 | 메뉴 그룹, 순서, 내부 경로, 역할과 표시 상태 편집 | 관리자 |
@@ -80,7 +96,7 @@ Spring MVC, JSP, MariaDB 조합을 새 프로젝트에서 반복해서 사용할
 - Flyway V2 기반 동적 메뉴와 관리자 메뉴 편집 감사 이벤트
 - Actuator health/info 공개, 나머지 관리 엔드포인트 관리자 제한
 - 정상 종료, liveness/readiness probe, 비루트·읽기 전용 컨테이너
-- 한국어 기본 메시지와 영문 메시지 번들, 반응형 JSP 화면
+- 브라우저 언어 감지, 한영 선택 쿠키와 전체 기본 화면 메시지 번들
 
 ## 빠른 시작
 
@@ -107,9 +123,10 @@ make up
 컨테이너가 준비되면 다음 순서로 확인합니다.
 
 1. `.env`의 `APP_BOOTSTRAP_ADMIN_USERNAME`과 `APP_BOOTSTRAP_ADMIN_PASSWORD`를 사용해 `http://127.0.0.1:8080/login`에 로그인합니다.
-2. 임시 비밀번호를 즉시 변경합니다. 변경하면 기존 로그인 세션이 모두 만료됩니다.
-3. 다음 기동 전 `.env`의 `APP_BOOTSTRAP_ADMIN_ENABLED=false`로 바꿔 초기 계정 생성을 닫습니다.
-4. 자동 점검을 실행합니다.
+2. 로그인 패널 오른쪽 위에서 한국어와 영어가 전환되고, 새로고침 뒤에도 선택이 유지되는지 확인합니다.
+3. 임시 비밀번호를 즉시 변경합니다. 변경하면 기존 로그인 세션이 모두 만료됩니다.
+4. 다음 기동 전 `.env`의 `APP_BOOTSTRAP_ADMIN_ENABLED=false`로 바꿔 초기 계정 생성을 닫습니다.
+5. 자동 점검을 실행합니다.
 
 ```sh
 make smoke
@@ -136,9 +153,9 @@ make down       # 컨테이너 중지, DB 볼륨 보존
 | 주소 | 기대 결과 |
 |---|---|
 | `http://127.0.0.1:8080/login` | 로그인 화면 |
-| `http://127.0.0.1:8080/actuator/health` | 애플리케이션 상태 |
-| `http://127.0.0.1:8080/actuator/health/liveness` | 프로세스 생존 상태 |
-| `http://127.0.0.1:8080/actuator/health/readiness` | 요청 수신 준비 상태 |
+| `http://127.0.0.1:8080/internal/actuator/health` | 애플리케이션 상태 |
+| `http://127.0.0.1:8080/internal/actuator/health/liveness` | 프로세스 생존 상태 |
+| `http://127.0.0.1:8080/internal/actuator/health/readiness` | 요청 수신 준비 상태 |
 
 문제가 생기면 `make logs`로 애플리케이션과 DB 로그를 함께 확인합니다. 처음부터 다시 만들 필요가 있을 때도 `make down`은 DB 볼륨을 보존하므로, 볼륨 삭제가 필요한지 먼저 판단하세요.
 
@@ -146,7 +163,7 @@ make down       # 컨테이너 중지, DB 볼륨 보존
 
 1. `pom.xml`의 `groupId`, `artifactId`, `name`, `finalName`을 서비스 명에 맞춥니다.
 2. `com.example.webstarter` 패키지를 조직의 역도메인 패키지로 일괄 변경합니다.
-3. `messages*.properties`, 홈·대시보드 JSP의 제품 문구를 바꾸고 `theme-modern.css`의 의미 기반 디자인 토큰을 서비스 브랜드에 맞춥니다. 구조와 동작 기준은 `app.css`에 유지합니다.
+3. `messages*.properties`의 제품 문구와 기본 메뉴 번역을 바꾸고 `theme-modern.css`의 의미 기반 디자인 토큰을 서비스 브랜드에 맞춥니다. 구조와 동작 기준은 `app.css`에 유지합니다.
 4. `V1__create_security_baseline.sql`과 `V2__create_navigation_menus.sql`은 그대로 두고, 업무 테이블은 반드시 새 Flyway 버전 파일로 추가합니다.
 5. 업무 권한이 단순 `USER`/`ADMIN`을 넘는다면 역할을 기능 권한으로 세분화하고 서비스 메서드의 `@PreAuthorize`를 함께 수정합니다.
 6. 배포 전에 [보안 체크리스트](docs/SECURITY-CHECKLIST.md)와 [운영 가이드](docs/OPERATIONS.md)를 완료합니다.
@@ -163,8 +180,8 @@ src/main/java/com/example/webstarter
 ├── admin        관리자 기능과 불변 조건
 ├── audit        감사 이벤트 DB·파일 기록
 ├── bootstrap    최초 관리자 생성
-├── navigation   DB 메뉴, 내부 경로 검증과 권한별 메뉴 구성
-└── web          MVC 컨트롤러, 요청 ID·헤더·접근 로그
+├── navigation   DB 메뉴, 내부 경로 검증, 권한별 메뉴와 번역 구성
+└── web          MVC·언어 컨트롤러, 요청 ID·헤더·접근 로그
 ```
 
 상세한 요청 흐름과 확장 경계는 [아키텍처 문서](docs/ARCHITECTURE.md)에 정리했습니다.
@@ -177,6 +194,7 @@ src/main/java/com/example/webstarter
 |---|---|---|
 | DB | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_POOL_MAX_SIZE` | 비밀값 외부 주입, 제한된 풀 |
 | 세션 | `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAME_SITE`, `SESSION_TIMEOUT`, `APP_SESSION_METADATA_MAX_ENTRIES` | 운영 HTTPS, 30분, Lax, 제한된 메타데이터 |
+| 다국어 | `APP_I18N_DEFAULT_LOCALE`, `APP_I18N_SUPPORTED_LOCALES`, `APP_I18N_COOKIE_*` | 허용 목록 기반 전환, 운영 Secure 쿠키 |
 | 암호 | `APP_PASSWORD_ALGORITHM`, `APP_ARGON2_*` | Argon2, 설정 검증 |
 | 로그인 보호 | `APP_LOGIN_*`, `APP_ACCOUNT_LOCK_*` | IP·식별자 제한과 계정 잠금 |
 | 헤더 | `APP_CONTENT_SECURITY_POLICY`, `APP_FRAME_OPTIONS`, `APP_PERMISSIONS_POLICY`, `APP_HSTS_*` | 외부 프레임 차단, 동일 출처 업무 탭 허용 |

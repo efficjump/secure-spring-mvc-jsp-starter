@@ -71,12 +71,12 @@ public class NavigationMenuService {
     public NavigationMenuSummary create(NavigationMenuForm form) {
         validateLocalPath(form.getPath());
         if (repository.existsByMenuKey(form.getMenuKey())) {
-            throw new NavigationMenuOperationException("이미 사용 중인 메뉴 키입니다.");
+            throw new NavigationMenuOperationException("navigation.error.duplicateKey");
         }
         try {
             return NavigationMenuSummary.from(repository.saveAndFlush(NavigationMenu.create(form, clock.instant())));
         } catch (DataIntegrityViolationException exception) {
-            throw new NavigationMenuOperationException("메뉴 키가 중복되었거나 저장값이 올바르지 않습니다.", exception);
+            throw new NavigationMenuOperationException("navigation.error.invalidStoredValue", exception);
         }
     }
 
@@ -85,16 +85,16 @@ public class NavigationMenuService {
     public NavigationMenuSummary update(Long id, NavigationMenuForm form) {
         validateLocalPath(form.getPath());
         NavigationMenu menu = repository.findByIdForUpdate(id)
-                .orElseThrow(() -> new NavigationMenuOperationException("대상 메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NavigationMenuOperationException("navigation.error.notFound"));
         if (repository.existsByMenuKeyAndIdNot(form.getMenuKey(), id)) {
-            throw new NavigationMenuOperationException("이미 사용 중인 메뉴 키입니다.");
+            throw new NavigationMenuOperationException("navigation.error.duplicateKey");
         }
         try {
             menu.update(form, clock.instant());
             repository.flush();
             return NavigationMenuSummary.from(menu);
         } catch (DataIntegrityViolationException exception) {
-            throw new NavigationMenuOperationException("메뉴 키가 중복되었거나 저장값이 올바르지 않습니다.", exception);
+            throw new NavigationMenuOperationException("navigation.error.invalidStoredValue", exception);
         }
     }
 
@@ -102,24 +102,24 @@ public class NavigationMenuService {
     @Transactional
     public NavigationMenuSummary toggleEnabled(Long id) {
         NavigationMenu menu = repository.findByIdForUpdate(id)
-                .orElseThrow(() -> new NavigationMenuOperationException("대상 메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NavigationMenuOperationException("navigation.error.notFound"));
         menu.toggleEnabled(clock.instant());
         return NavigationMenuSummary.from(menu);
     }
 
     private NavigationMenu find(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new NavigationMenuOperationException("대상 메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NavigationMenuOperationException("navigation.error.notFound"));
     }
 
     private void validateLocalPath(String path) {
         if (path == null || !path.startsWith("/") || path.startsWith("//") || path.indexOf('\\') >= 0) {
-            throw new NavigationMenuOperationException("메뉴 경로는 애플리케이션 내부 절대 경로여야 합니다.");
+            throw new NavigationMenuOperationException("navigation.error.path.absolute");
         }
         boolean reserved = workspaceProperties.reservedPaths().stream()
                 .anyMatch(reservedPath -> path.equals(reservedPath) || path.startsWith(reservedPath + "/"));
         if (reserved) {
-            throw new NavigationMenuOperationException("인증·업무 셸·내부 관리 경로는 메뉴 화면으로 등록할 수 없습니다.");
+            throw new NavigationMenuOperationException("navigation.error.path.reserved");
         }
         try {
             URI uri = new URI(path);
@@ -128,10 +128,10 @@ public class NavigationMenuService {
                     || uri.getRawQuery() != null
                     || uri.getRawFragment() != null
                     || !uri.normalize().getPath().equals(path)) {
-                throw new NavigationMenuOperationException("외부 주소, 쿼리, 경로 이동 문자는 메뉴에 사용할 수 없습니다.");
+                throw new NavigationMenuOperationException("navigation.error.path.unsafe");
             }
         } catch (URISyntaxException exception) {
-            throw new NavigationMenuOperationException("메뉴 경로 형식이 올바르지 않습니다.", exception);
+            throw new NavigationMenuOperationException("navigation.error.path.invalid", exception);
         }
     }
 }

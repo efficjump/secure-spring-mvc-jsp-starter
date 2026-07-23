@@ -3,7 +3,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!doctype html>
-<html lang="ko">
+<html lang="<c:out value="${currentLocaleTag}"/>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,7 @@
     <script src="${workspaceScriptUrl}" defer></script>
 </head>
 <body class="workspace-body">
-<a class="skip-link" href="#workspace-content">본문으로 바로가기</a>
+<a class="skip-link" href="#workspace-content"><spring:message code="common.skipToContent"/></a>
 <spring:message var="tabLimitMessage" code="workspace.tab.limit" arguments="${workspaceMaxTabs}"/>
 <spring:message var="tabCloseLabel" code="workspace.tab.close"/>
 <spring:message var="sessionExpiredMessage" code="workspace.session.expired"/>
@@ -30,17 +30,20 @@
      data-tab-limit-message="<c:out value="${tabLimitMessage}"/>"
      data-tab-close-label="<c:out value="${tabCloseLabel}"/>"
      data-session-expired-message="<c:out value="${sessionExpiredMessage}"/>">
-    <aside class="workspace-sidebar" aria-label="업무 메뉴">
+    <spring:message var="workspaceSidebarLabel" code="workspace.menu.sidebar"/>
+    <aside class="workspace-sidebar" aria-label="<c:out value="${workspaceSidebarLabel}"/>">
         <div class="workspace-brand-row">
             <c:url var="workspaceHomeUrl" value="/workspace"/>
-            <a class="workspace-brand" href="${workspaceHomeUrl}" aria-label="업무 공간 처음으로">
+            <spring:message var="workspaceHomeLabel" code="workspace.brand.home"/>
+            <a class="workspace-brand" href="${workspaceHomeUrl}" aria-label="<c:out value="${workspaceHomeLabel}"/>">
                 <span class="brand-mark" aria-hidden="true">S</span>
                 <span class="brand-copy">
                     <strong><spring:message code="app.name"/></strong>
-                    <small>Enterprise Workspace</small>
+                    <small><spring:message code="workspace.brand.subtitle"/></small>
                 </span>
             </a>
-            <button class="icon-button sidebar-toggle" type="button" data-action="toggle-sidebar" aria-label="메뉴 접기">
+            <spring:message var="workspaceMenuCollapseLabel" code="workspace.menu.collapse"/>
+            <button class="icon-button sidebar-toggle" type="button" data-action="toggle-sidebar" aria-label="<c:out value="${workspaceMenuCollapseLabel}"/>">
                 <svg aria-hidden="true"><use href="${iconSpriteUrl}#icon-sidebar"></use></svg>
             </button>
         </div>
@@ -51,7 +54,8 @@
             <input id="menu-search" type="search" placeholder="<spring:message code="workspace.menu.search"/>" autocomplete="off">
         </div>
 
-        <nav class="workspace-navigation" aria-label="애플리케이션 메뉴">
+        <spring:message var="workspaceApplicationMenuLabel" code="workspace.menu.application"/>
+        <nav class="workspace-navigation" aria-label="<c:out value="${workspaceApplicationMenuLabel}"/>">
             <c:set var="currentMenuGroup" value=""/>
             <c:forEach var="menu" items="${menus}">
                 <c:if test="${menu.menuGroup ne currentMenuGroup}">
@@ -78,7 +82,7 @@
             <span class="profile-avatar" aria-hidden="true"><c:out value="${workspaceUser.displayName.substring(0, 1)}"/></span>
             <span class="profile-copy">
                 <strong><c:out value="${workspaceUser.displayName}"/></strong>
-                <small><c:choose><c:when test="${workspaceUser.admin}">Administrator</c:when><c:otherwise>Standard user</c:otherwise></c:choose></small>
+                <small><c:choose><c:when test="${workspaceUser.admin}"><spring:message code="role.admin"/></c:when><c:otherwise><spring:message code="role.user"/></c:otherwise></c:choose></small>
             </span>
         </div>
     </aside>
@@ -86,7 +90,8 @@
     <section class="workspace-main">
         <header class="workspace-topbar">
             <div class="topbar-context">
-                <button class="icon-button mobile-menu-button" type="button" data-action="toggle-mobile-menu" aria-label="메뉴 열기">
+                <spring:message var="workspaceMenuOpenLabel" code="workspace.menu.open"/>
+                <button class="icon-button mobile-menu-button" type="button" data-action="toggle-mobile-menu" aria-label="<c:out value="${workspaceMenuOpenLabel}"/>">
                     <svg aria-hidden="true"><use href="${iconSpriteUrl}#icon-menu"></use></svg>
                 </button>
                 <span class="workspace-kicker"><spring:message code="workspace.title"/></span>
@@ -95,6 +100,7 @@
             </div>
             <div class="topbar-actions">
                 <span class="connection-state"><i aria-hidden="true"></i><spring:message code="workspace.connected"/></span>
+                <%@ include file="fragments/language-switcher.jspf" %>
                 <button class="icon-button" type="button" data-action="refresh-tab" title="<spring:message code="workspace.refresh"/>" aria-label="<spring:message code="workspace.refresh"/>">
                     <svg aria-hidden="true"><use href="${iconSpriteUrl}#icon-refresh"></use></svg>
                 </button>
@@ -107,7 +113,8 @@
         </header>
 
         <div class="workspace-tabbar">
-            <div id="workspace-tabs" class="workspace-tabs" role="tablist" aria-label="열린 업무 화면"></div>
+            <spring:message var="workspaceTabsLabel" code="workspace.tabs.label"/>
+            <div id="workspace-tabs" class="workspace-tabs" role="tablist" aria-label="<c:out value="${workspaceTabsLabel}"/>"></div>
             <button class="tabbar-action" type="button" data-action="close-other-tabs"><spring:message code="workspace.tabs.reset"/></button>
         </div>
 
@@ -120,7 +127,8 @@
             </div>
         </main>
     </section>
-    <button class="sidebar-scrim" type="button" data-action="close-mobile-menu" aria-label="메뉴 닫기"></button>
+    <spring:message var="workspaceMenuCloseLabel" code="workspace.menu.close"/>
+    <button class="sidebar-scrim" type="button" data-action="close-mobile-menu" aria-label="<c:out value="${workspaceMenuCloseLabel}"/>"></button>
     <div id="workspace-toast" class="workspace-toast" role="status" aria-live="polite" hidden></div>
 </div>
 </body>

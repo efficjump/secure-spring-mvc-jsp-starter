@@ -17,6 +17,8 @@ server:
         secure: false
 
 app:
+  i18n:
+    cookie-secure: false
   bootstrap:
     admin:
       enabled: false
@@ -25,4 +27,3 @@ app:
       level: OFF
       bind-level: OFF
       driver-level: OFF
-

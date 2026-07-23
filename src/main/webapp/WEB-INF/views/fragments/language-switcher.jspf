@@ -1,0 +1,17 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:set var="languageSelectorLabel"><spring:message code="language.selector"/></c:set>
+<nav class="language-switcher" aria-label="<c:out value="${languageSelectorLabel}"/>">
+    <c:forEach var="language" items="${supportedLanguages}">
+        <c:url var="languageUrl" value="/locale">
+            <c:param name="lang" value="${language.tag}"/>
+            <c:param name="returnTo" value="${localeReturnTo}"/>
+        </c:url>
+        <spring:message var="languageChangeLabel" code="language.change" arguments="${language.label}"/>
+        <a class="language-option<c:if test="${language.active}"> is-active</c:if>"
+           href="${languageUrl}"
+           lang="${language.tag}"
+           hreflang="${language.tag}"
+           aria-label="<c:out value="${languageChangeLabel}"/>"
+           <c:if test="${language.active}">aria-current="true"</c:if>><c:out value="${language.label}"/></a>
+    </c:forEach>
+</nav>

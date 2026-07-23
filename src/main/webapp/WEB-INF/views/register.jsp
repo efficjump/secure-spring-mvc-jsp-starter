@@ -7,7 +7,7 @@
 
 <section class="form-shell">
     <div class="form-card form-card-wide">
-        <p class="eyebrow">New account</p>
+        <p class="eyebrow"><spring:message code="registration.eyebrow"/></p>
         <h1><spring:message code="registration.title"/></h1>
         <form:form method="post" modelAttribute="registrationForm">
             <form:errors path="*" cssClass="notice notice-error" element="div"/>
@@ -40,7 +40,7 @@
                     <form:errors path="passwordConfirmation" cssClass="field-error"/>
                 </div>
             </div>
-            <p class="help-text">긴 문장형 비밀번호를 권장합니다. 사용자 이름이나 이메일을 포함할 수 없습니다.</p>
+            <p class="help-text"><spring:message code="registration.help"/></p>
             <button class="button button-block" type="submit"><spring:message code="registration.submit"/></button>
         </form:form>
     </div>

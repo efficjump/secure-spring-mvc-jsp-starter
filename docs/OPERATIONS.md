@@ -15,6 +15,7 @@ DB_URL=jdbc:mariadb://db.example.internal:3306/webapp?sslMode=verify-full
 DB_USERNAME=<runtime-account>
 DB_PASSWORD=<secret-manager-reference>
 SESSION_COOKIE_SECURE=true
+APP_I18N_COOKIE_SECURE=true
 APP_BOOTSTRAP_ADMIN_ENABLED=false
 APP_REGISTRATION_ENABLED=false
 ```
@@ -57,6 +58,23 @@ APP_REGISTRATION_ENABLED=false
 
 보안 기간 값과 Argon2 비용을 올릴 때는 추측으로 정하지 말고 대표 하드웨어에서 p95/p99 로그인 지연과 동시 요청 메모리를 측정하세요.
 
+### 다국어와 로케일 쿠키
+
+| 변수 | 기본값 | 운영 메모 |
+|---|---:|---|
+| `APP_I18N_DEFAULT_LOCALE` | `ko` | 허용 목록에 반드시 포함되는 BCP 47 언어 태그 |
+| `APP_I18N_SUPPORTED_LOCALES` | `ko,en` | 번들이 준비된 언어만 쉼표로 구분해 등록 |
+| `APP_I18N_RESPECT_ACCEPT_LANGUAGE` | `true` | 선택 쿠키가 없는 첫 요청에만 브라우저 선호 언어 반영 |
+| `APP_I18N_COOKIE_NAME` | `APP_LOCALE` | 같은 호스트의 다른 앱 쿠키와 충돌하지 않는 이름 사용 |
+| `APP_I18N_COOKIE_PATH` | `/` | 별도 컨텍스트 경로 배포 시 해당 경로로 범위 축소 |
+| `APP_I18N_COOKIE_MAX_AGE` | `365d` | 개인정보·사용자 설정 보존 정책에 맞춰 조정 |
+| `APP_I18N_COOKIE_SAME_SITE` | `Lax` | `Lax` 또는 더 엄격한 `Strict`만 허용 |
+| `APP_I18N_COOKIE_SECURE` | `true` | 운영 HTTPS에서는 반드시 `true`, 로컬 HTTP에서만 `false` |
+
+언어 쿠키는 자바스크립트에서 읽을 필요가 없으므로 `HttpOnly`이며, 교차 사이트 요청에 불필요하게 실리지 않도록 `SameSite=Lax`를 사용합니다. 언어 변경 엔드포인트는 설정된 허용 목록에 있는 정확한 언어 태그만 저장하고, 직접 변조된 쿠키 값도 해석 단계에서 허용 목록으로 다시 제한합니다. 화면 복귀 주소도 같은 애플리케이션의 정규화된 절대 경로만 허용하므로, 프록시나 애플리케이션이 이 검증을 우회해 외부 URL을 주입하지 않게 유지하세요.
+
+새 언어를 운영에 추가할 때는 번들 파일, 기본 메뉴 이름·그룹, 오류·검증 메시지, 이메일이나 내보내기처럼 별도 출력 채널을 함께 검토합니다. 현재 자동 테스트는 한국어와 영어 번들의 키 집합을 비교합니다. 세 번째 언어를 추가하면 해당 파일도 같은 일관성 검사 대상에 포함하세요.
+
 ### 업무 셸과 동일 출처 프레임
 
 | 변수 | 기본값 | 운영 메모 |
@@ -69,7 +87,7 @@ APP_REGISTRATION_ENABLED=false
 
 업무 셸은 `frame-ancestors 'self'`와 `SAMEORIGIN`을 함께 사용합니다. `APP_FRAME_OPTIONS=DENY`로 바꾸거나 CSP의 `frame-ancestors`를 `none`으로 바꾸면 보안은 더 엄격해지지만 내부 탭도 렌더링되지 않습니다. 반대로 다른 출처를 허용하지 마세요. 외부 시스템 연계는 iframe 예외보다 OIDC와 서버 간 API 등 명시적인 통합 경계를 우선합니다.
 
-메뉴 관리자는 로컬 절대 경로만 등록할 수 있습니다. 예약 목록을 줄일 때는 `/workspace` 재귀 프레임, 로그인·로그아웃 경로, Actuator와 정적 자산이 메뉴로 열리지 않는지 먼저 확인해야 합니다.
+메뉴 관리자는 로컬 절대 경로만 등록할 수 있습니다. 예약 목록을 줄일 때는 `/workspace` 재귀 프레임, 로그인·로그아웃·언어 변경 경로, Actuator와 정적 자산이 메뉴로 열리지 않는지 먼저 확인해야 합니다.
 
 ### 프록시와 TLS
 

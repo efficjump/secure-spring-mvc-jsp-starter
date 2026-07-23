@@ -1,28 +1,28 @@
 package com.example.webstarter.navigation;
 
+import java.util.Locale;
+
 public enum NavigationIcon {
-    DASHBOARD("dashboard", "대시보드"),
-    USERS("users", "사용자"),
-    LOGIN_HISTORY("login-history", "로그인 이력"),
-    SESSIONS("sessions", "세션"),
-    MENUS("menus", "메뉴"),
-    SECURITY("security", "보안"),
-    DOCUMENT("document", "문서"),
-    SETTINGS("settings", "설정");
+    DASHBOARD("dashboard"),
+    USERS("users"),
+    LOGIN_HISTORY("login-history"),
+    SESSIONS("sessions"),
+    MENUS("menus"),
+    SECURITY("security"),
+    DOCUMENT("document"),
+    SETTINGS("settings");
 
     private final String symbolId;
-    private final String label;
 
-    NavigationIcon(String symbolId, String label) {
+    NavigationIcon(String symbolId) {
         this.symbolId = symbolId;
-        this.label = label;
     }
 
     public String getSymbolId() {
         return symbolId;
     }
 
-    public String getLabel() {
-        return label;
+    public String getMessageCode() {
+        return "navigation.icon." + name().toLowerCase(Locale.ROOT).replace('_', '.');
     }
 }

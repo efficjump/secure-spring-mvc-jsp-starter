@@ -29,4 +29,17 @@ public record NavigationMenuSummary(
     public boolean isEnabled() {
         return enabled;
     }
+
+    public NavigationMenuSummary withText(String localizedLabel, String localizedGroup) {
+        return new NavigationMenuSummary(
+                id,
+                menuKey,
+                localizedLabel,
+                localizedGroup,
+                path,
+                icon,
+                requiredRole,
+                displayOrder,
+                enabled);
+    }
 }

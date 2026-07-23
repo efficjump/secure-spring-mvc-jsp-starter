@@ -3,7 +3,7 @@
 <c:if test="${not embeddedView and not immersivePage}">
     <footer class="site-footer">
         <div class="shell">
-            <p>Spring MVC · JSP · MariaDB 보안 기준 프로젝트</p>
+            <p><spring:message code="footer.baseline"/></p>
         </div>
     </footer>
 </c:if>

@@ -56,7 +56,7 @@ class NavigationMenuServiceIntegrationTest {
 
         assertThatThrownBy(() -> menuService.create(form))
                 .isInstanceOf(NavigationMenuOperationException.class)
-                .hasMessageContaining("내부 절대 경로");
+                .hasMessage("navigation.error.path.absolute");
     }
 
     @Test
@@ -65,7 +65,7 @@ class NavigationMenuServiceIntegrationTest {
 
         assertThatThrownBy(() -> menuService.create(form))
                 .isInstanceOf(NavigationMenuOperationException.class)
-                .hasMessageContaining("업무 셸");
+                .hasMessage("navigation.error.path.reserved");
     }
 
     @Test

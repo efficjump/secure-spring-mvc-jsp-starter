@@ -7,16 +7,16 @@
 
 <section class="page-toolbar">
     <div>
-        <p class="section-kicker">Account security</p>
+        <p class="section-kicker"><spring:message code="password.kicker"/></p>
         <h1><spring:message code="password.title"/></h1>
-        <p>현재 자격 증명을 확인한 뒤 새 비밀번호를 설정합니다.</p>
+        <p><spring:message code="password.description"/></p>
     </div>
-    <span class="status status-success">Argon2 보호</span>
+    <span class="status status-success"><spring:message code="password.protected"/></span>
 </section>
 
 <section class="content-section">
     <div class="form-surface">
-        <p class="help-text">변경이 완료되면 탈취된 세션의 재사용을 막기 위해 현재 계정을 포함한 모든 세션을 종료합니다.</p>
+        <p class="help-text"><spring:message code="password.help"/></p>
         <form:form method="post" modelAttribute="passwordChangeForm">
             <form:errors path="*" cssClass="notice notice-error" element="div"/>
             <div class="field">

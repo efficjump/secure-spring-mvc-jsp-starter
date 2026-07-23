@@ -3,7 +3,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!doctype html>
-<html lang="ko">
+<html lang="<c:out value="${currentLocaleTag}"/>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,13 +14,14 @@
     <link rel="stylesheet" href="${modernThemeUrl}">
 </head>
 <body class="<c:choose><c:when test="${immersivePage}">immersive-view</c:when><c:when test="${embeddedView}">embedded-view</c:when><c:otherwise>standard-view</c:otherwise></c:choose>">
-<a class="skip-link" href="#main-content">본문으로 바로가기</a>
+<a class="skip-link" href="#main-content"><spring:message code="common.skipToContent"/></a>
 <c:if test="${not embeddedView and not immersivePage}">
     <header class="site-header">
         <div class="shell header-inner">
             <c:url var="homeUrl" value="/"/>
             <a class="brand" href="${homeUrl}"><spring:message code="app.name"/></a>
-            <nav class="primary-nav" aria-label="주요 메뉴">
+            <spring:message var="primaryNavigationLabel" code="common.primaryNavigation"/>
+            <nav class="primary-nav" aria-label="<c:out value="${primaryNavigationLabel}"/>">
                 <a href="${homeUrl}"><spring:message code="nav.home"/></a>
                 <sec:authorize access="isAuthenticated()">
                     <c:url var="workspaceUrl" value="/workspace"/>
@@ -28,6 +29,7 @@
                 </sec:authorize>
             </nav>
             <div class="session-actions">
+                <%@ include file="language-switcher.jspf" %>
                 <sec:authorize access="isAnonymous()">
                     <c:url var="loginUrl" value="/login"/>
                     <a class="button button-quiet" href="${loginUrl}"><spring:message code="nav.login"/></a>

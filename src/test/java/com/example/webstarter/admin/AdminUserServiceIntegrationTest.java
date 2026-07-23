@@ -61,7 +61,7 @@ class AdminUserServiceIntegrationTest {
     void administratorCannotDemoteOwnAccount() {
         assertThatThrownBy(() -> adminUserService.changeRole("admin-one", adminOne.getId(), Role.USER))
                 .isInstanceOf(UserOperationException.class)
-                .hasMessageContaining("본인의 관리자 권한");
+                .hasMessage("admin.user.error.selfRole");
     }
 
     @Test
@@ -71,7 +71,7 @@ class AdminUserServiceIntegrationTest {
 
         assertThatThrownBy(() -> adminUserService.toggleEnabled("admin-two", adminOne.getId()))
                 .isInstanceOf(UserOperationException.class)
-                .hasMessageContaining("마지막 활성 관리자");
+                .hasMessage("admin.user.error.lastActiveAdmin");
     }
 
     private AppUser saveUser(String username, Role role) {

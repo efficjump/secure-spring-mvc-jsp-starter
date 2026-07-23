@@ -49,7 +49,7 @@ public class AdminSessionController {
         try {
             String username = sessionService.terminate(sessionToken, currentSessionId(request));
             recordAudit(authentication.getName(), username, request);
-            redirectAttributes.addFlashAttribute("message", "세션을 종료했습니다.");
+            redirectAttributes.addFlashAttribute("message", "admin.session.terminated");
         } catch (SessionOperationException exception) {
             redirectAttributes.addFlashAttribute("error", exception.getMessage());
         }

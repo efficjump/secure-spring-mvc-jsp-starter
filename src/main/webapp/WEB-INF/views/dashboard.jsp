@@ -1,44 +1,47 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="pageTitle" value="대시보드"/>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<c:set var="pageTitle"><spring:message code="dashboard.title"/></c:set>
 <%@ include file="fragments/header.jspf" %>
 
 <section class="page-toolbar">
     <div>
-        <p class="section-kicker">Operations overview</p>
-        <h1>업무 현황</h1>
-        <p><c:out value="${user.displayName}"/>님의 계정 상태와 현재 운영 지표를 확인합니다.</p>
+        <p class="section-kicker"><spring:message code="dashboard.kicker"/></p>
+        <h1><spring:message code="dashboard.heading"/></h1>
+        <p><spring:message code="dashboard.description" arguments="${user.displayName}"/></p>
     </div>
-    <span class="status status-success">정상 운영</span>
+    <span class="status status-success"><spring:message code="common.status.healthy"/></span>
 </section>
 
 <c:choose>
     <c:when test="${operations.administrator}">
-        <section class="metric-strip" aria-label="운영 지표">
-            <div class="metric-item"><span class="metric-label">전체 사용자</span><strong class="metric-value"><c:out value="${operations.totalUsers}"/></strong><span class="metric-caption">등록 계정</span></div>
-            <div class="metric-item"><span class="metric-label">활성 계정</span><strong class="metric-value"><c:out value="${operations.enabledUsers}"/></strong><span class="metric-caption">로그인 허용</span></div>
-            <div class="metric-item"><span class="metric-label">활성 세션</span><strong class="metric-value"><c:out value="${operations.activeSessions}"/></strong><span class="metric-caption">현재 노드 기준</span></div>
-            <div class="metric-item"><span class="metric-label">거부된 로그인</span><strong class="metric-value"><c:out value="${operations.rejectedLoginsLast24Hours}"/></strong><span class="metric-caption">최근 24시간</span></div>
+        <spring:message var="adminMetricsLabel" code="dashboard.admin.metrics.label"/>
+        <section class="metric-strip" aria-label="<c:out value="${adminMetricsLabel}"/>">
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.totalUsers.label"/></span><strong class="metric-value"><c:out value="${operations.totalUsers}"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.totalUsers.caption"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.enabledUsers.label"/></span><strong class="metric-value"><c:out value="${operations.enabledUsers}"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.enabledUsers.caption"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.activeSessions.label"/></span><strong class="metric-value"><c:out value="${operations.activeSessions}"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.activeSessions.caption"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.rejectedLogins.label"/></span><strong class="metric-value"><c:out value="${operations.rejectedLoginsLast24Hours}"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.rejectedLogins.caption"/></span></div>
         </section>
     </c:when>
     <c:otherwise>
-        <section class="metric-strip" aria-label="계정 요약">
-            <div class="metric-item"><span class="metric-label">계정 상태</span><strong class="metric-value">활성</strong><span class="metric-caption">로그인 허용</span></div>
-            <div class="metric-item"><span class="metric-label">권한</span><strong class="metric-value">사용자</strong><span class="metric-caption">표준 업무 권한</span></div>
-            <div class="metric-item"><span class="metric-label">최근 로그인</span><strong class="metric-value"><c:choose><c:when test="${empty user.lastLoginAt}">처음</c:when><c:otherwise>완료</c:otherwise></c:choose></strong><span class="metric-caption"><c:out value="${user.lastLoginAt}"/></span></div>
-            <div class="metric-item"><span class="metric-label">보안 정책</span><strong class="metric-value">적용</strong><span class="metric-caption">세션·감사 보호</span></div>
+        <spring:message var="userMetricsLabel" code="dashboard.user.metrics.label"/>
+        <section class="metric-strip" aria-label="<c:out value="${userMetricsLabel}"/>">
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.accountStatus.label"/></span><strong class="metric-value"><spring:message code="common.status.active"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.accountStatus.caption"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.role.label"/></span><strong class="metric-value"><spring:message code="role.user"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.role.caption"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.lastLogin.label"/></span><strong class="metric-value"><c:choose><c:when test="${empty user.lastLoginAt}"><spring:message code="common.first"/></c:when><c:otherwise><spring:message code="common.completed"/></c:otherwise></c:choose></strong><span class="metric-caption"><c:out value="${user.lastLoginAt}"/></span></div>
+            <div class="metric-item"><span class="metric-label"><spring:message code="dashboard.metric.security.label"/></span><strong class="metric-value"><spring:message code="common.status.applied"/></strong><span class="metric-caption"><spring:message code="dashboard.metric.security.caption"/></span></div>
         </section>
     </c:otherwise>
 </c:choose>
 
 <section class="content-section">
-    <div class="section-heading"><h2>내 계정 정보</h2><span class="secondary">인증된 계정 기준</span></div>
+    <div class="section-heading"><h2><spring:message code="dashboard.account.title"/></h2><span class="secondary"><spring:message code="dashboard.account.caption"/></span></div>
     <dl class="definition-list">
-        <div class="definition-row"><dt>사용자 이름</dt><dd><c:out value="${user.username}"/></dd></div>
-        <div class="definition-row"><dt>표시 이름</dt><dd><c:out value="${user.displayName}"/></dd></div>
-        <div class="definition-row"><dt>이메일</dt><dd><c:out value="${user.email}"/></dd></div>
-        <div class="definition-row"><dt>마지막 로그인</dt><dd><c:choose><c:when test="${empty user.lastLoginAt}">첫 로그인</c:when><c:otherwise><c:out value="${user.lastLoginAt}"/></c:otherwise></c:choose></dd></div>
-        <div class="definition-row"><dt>가입 일시</dt><dd><c:out value="${user.createdAt}"/></dd></div>
+        <div class="definition-row"><dt><spring:message code="dashboard.account.username"/></dt><dd><c:out value="${user.username}"/></dd></div>
+        <div class="definition-row"><dt><spring:message code="dashboard.account.displayName"/></dt><dd><c:out value="${user.displayName}"/></dd></div>
+        <div class="definition-row"><dt><spring:message code="dashboard.account.email"/></dt><dd><c:out value="${user.email}"/></dd></div>
+        <div class="definition-row"><dt><spring:message code="dashboard.account.lastLogin"/></dt><dd><c:choose><c:when test="${empty user.lastLoginAt}"><spring:message code="dashboard.account.firstLogin"/></c:when><c:otherwise><c:out value="${user.lastLoginAt}"/></c:otherwise></c:choose></dd></div>
+        <div class="definition-row"><dt><spring:message code="dashboard.account.createdAt"/></dt><dd><c:out value="${user.createdAt}"/></dd></div>
     </dl>
 </section>
 

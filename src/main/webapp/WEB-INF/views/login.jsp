@@ -13,21 +13,23 @@
             <spring:message code="app.name"/>
         </a>
         <div class="auth-copy">
-            <p class="eyebrow">Secure business platform</p>
-            <h2>업무와 보안을<br>한 화면에서 관리합니다.</h2>
-            <p>사용자 계정, 로그인 이력, 활성 세션과 시스템 메뉴를 안전한 다중 탭 작업공간에서 운영하세요.</p>
+            <p class="eyebrow"><spring:message code="login.context.eyebrow"/></p>
+            <h2><spring:message code="login.context.heading.first"/><br><spring:message code="login.context.heading.second"/></h2>
+            <p><spring:message code="login.context.description"/></p>
         </div>
-        <div class="auth-baseline" aria-label="보안 기준">
-            <span>Argon2</span>
-            <span>CSRF protected</span>
-            <span>Audit ready</span>
+        <spring:message var="loginBaselineLabel" code="login.baseline.label"/>
+        <div class="auth-baseline" aria-label="<c:out value="${loginBaselineLabel}"/>">
+            <span><spring:message code="login.baseline.password"/></span>
+            <span><spring:message code="login.baseline.csrf"/></span>
+            <span><spring:message code="login.baseline.audit"/></span>
         </div>
     </div>
     <div class="auth-panel">
+        <%@ include file="fragments/language-switcher.jspf" %>
         <div class="auth-form-wrap">
-            <p class="eyebrow">Account access</p>
+            <p class="eyebrow"><spring:message code="login.form.eyebrow"/></p>
             <h1><spring:message code="login.title"/></h1>
-            <p class="auth-intro">등록된 업무 계정으로 보안 작업공간에 접속합니다.</p>
+            <p class="auth-intro"><spring:message code="login.form.description"/></p>
 
             <c:if test="${param.error != null}"><div class="notice notice-error" role="alert"><spring:message code="login.error"/></div></c:if>
             <c:if test="${param.rate_limited != null}"><div class="notice notice-error" role="alert"><spring:message code="login.rateLimited"/></div></c:if>
@@ -49,7 +51,7 @@
                 </div>
                 <button class="button button-block" type="submit"><spring:message code="login.submit"/></button>
             </form>
-            <p class="auth-help">계정 접근 문제는 시스템 관리자에게 문의해 주세요.</p>
+            <p class="auth-help"><spring:message code="login.help"/></p>
         </div>
     </div>
 </section>

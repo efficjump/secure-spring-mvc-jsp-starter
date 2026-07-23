@@ -1,17 +1,13 @@
 package com.example.webstarter.audit;
 
+import java.util.Locale;
+
 public enum AuditOutcome {
-    SUCCESS("성공"),
-    FAILURE("실패"),
-    DENIED("거부");
+    SUCCESS,
+    FAILURE,
+    DENIED;
 
-    private final String displayName;
-
-    AuditOutcome(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
+    public String getMessageCode() {
+        return "audit.outcome." + name().toLowerCase(Locale.ROOT);
     }
 }

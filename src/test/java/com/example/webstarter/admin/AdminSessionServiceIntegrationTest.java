@@ -53,6 +53,6 @@ class AdminSessionServiceIntegrationTest {
     void invalidTerminationTokenDoesNotSelectAnySession() {
         assertThatThrownBy(() -> sessionService.terminate("not-a-valid-token", "current-session"))
                 .isInstanceOf(SessionOperationException.class)
-                .hasMessageContaining("존재하지 않습니다");
+                .hasMessage("admin.session.error.notFound");
     }
 }

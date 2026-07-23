@@ -97,6 +97,15 @@ management:
       show-values: never
 
 app:
+  i18n:
+    default-locale: ${APP_I18N_DEFAULT_LOCALE:ko}
+    supported-locales: ${APP_I18N_SUPPORTED_LOCALES:ko,en}
+    cookie-name: ${APP_I18N_COOKIE_NAME:APP_LOCALE}
+    cookie-path: ${APP_I18N_COOKIE_PATH:/}
+    cookie-max-age: ${APP_I18N_COOKIE_MAX_AGE:365d}
+    cookie-same-site: ${APP_I18N_COOKIE_SAME_SITE:Lax}
+    cookie-secure: ${APP_I18N_COOKIE_SECURE:true}
+    respect-accept-language: ${APP_I18N_RESPECT_ACCEPT_LANGUAGE:true}
   security:
     password:
       algorithm: ${APP_PASSWORD_ALGORITHM:argon2}
@@ -142,7 +151,7 @@ app:
     max-tabs: ${APP_WORKSPACE_MAX_TABS:12}
     default-menu-key: ${APP_WORKSPACE_DEFAULT_MENU_KEY:dashboard}
     storage-key: ${APP_WORKSPACE_STORAGE_KEY:secure-mvc-workspace}
-    reserved-paths: ${APP_WORKSPACE_RESERVED_PATHS:/workspace,/login,/logout,/register,/error,/assets,/internal}
+    reserved-paths: ${APP_WORKSPACE_RESERVED_PATHS:/workspace,/login,/logout,/register,/locale,/error,/assets,/internal}
   logging:
     directory: ${APP_LOG_DIRECTORY:logs}
     max-file-size: ${APP_LOG_MAX_FILE_SIZE:20MB}

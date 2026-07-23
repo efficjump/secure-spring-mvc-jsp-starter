@@ -39,11 +39,11 @@ public class AdminUserService {
     public UserSummary toggleEnabled(String actorUsername, Long userId) {
         List<AppUser> administrators = userRepository.findAllByRoleForUpdate(Role.ADMIN);
         AppUser target = findFromLockedAdministratorsOrById(administrators, userId);
-        requireNotSelf(actorUsername, target, "본인 계정은 비활성화할 수 없습니다.");
+        requireNotSelf(actorUsername, target, "admin.user.error.selfDisable");
         if (target.isEnabled()
                 && target.hasRole(Role.ADMIN)
                 && administrators.stream().filter(AppUser::isEnabled).count() <= 1) {
-            throw new UserOperationException("마지막 활성 관리자 계정은 비활성화할 수 없습니다.");
+            throw new UserOperationException("admin.user.error.lastActiveAdmin");
         }
         target.setEnabled(!target.isEnabled(), clock.instant());
         return UserSummary.from(target, clock.instant());
@@ -61,9 +61,9 @@ public class AdminUserService {
         List<AppUser> administrators = userRepository.findAllByRoleForUpdate(Role.ADMIN);
         AppUser target = findFromLockedAdministratorsOrById(administrators, userId);
         if (role == Role.USER && target.hasRole(Role.ADMIN)) {
-            requireNotSelf(actorUsername, target, "본인의 관리자 권한은 제거할 수 없습니다.");
+            requireNotSelf(actorUsername, target, "admin.user.error.selfRole");
             if (administrators.size() <= 1) {
-                throw new UserOperationException("마지막 관리자 권한은 제거할 수 없습니다.");
+                throw new UserOperationException("admin.user.error.lastAdmin");
             }
         }
         target.setPrimaryRole(role, clock.instant());
@@ -72,7 +72,7 @@ public class AdminUserService {
 
     private AppUser findForUpdate(Long userId) {
         return userRepository.findByIdForUpdate(userId)
-                .orElseThrow(() -> new UserOperationException("대상 사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserOperationException("admin.user.error.notFound"));
     }
 
     private AppUser findFromLockedAdministratorsOrById(List<AppUser> administrators, Long userId) {

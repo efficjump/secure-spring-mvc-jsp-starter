@@ -64,7 +64,7 @@ public class SecurityConfiguration {
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                         .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
                         .requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-                        .requestMatchers("/", "/login", "/register", "/error", "/access-denied", "/assets/**")
+                        .requestMatchers("/", "/login", "/register", "/locale", "/error", "/access-denied", "/assets/**")
                         .permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

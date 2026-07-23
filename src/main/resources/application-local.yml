@@ -5,9 +5,10 @@ server:
         secure: ${SESSION_COOKIE_SECURE:false}
 
 app:
+  i18n:
+    cookie-secure: ${APP_I18N_COOKIE_SECURE:false}
   logging:
     sql:
       level: ${APP_SQL_LOG_LEVEL:DEBUG}
       bind-level: ${APP_SQL_BIND_LOG_LEVEL:OFF}
       driver-level: ${APP_DB_DRIVER_LOG_LEVEL:OFF}
-

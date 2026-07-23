@@ -9,9 +9,7 @@ import com.example.webstarter.audit.SecurityAuditEvent;
 public record LoginAuditSummary(
         Long id,
         AuditEventType eventType,
-        String eventLabel,
         AuditOutcome outcome,
-        String outcomeLabel,
         String actorUsername,
         String subject,
         String ipAddress,
@@ -24,9 +22,7 @@ public record LoginAuditSummary(
         return new LoginAuditSummary(
                 event.getId(),
                 event.getEventType(),
-                event.getEventType().getDisplayName(),
                 event.getOutcome(),
-                event.getOutcome().getDisplayName(),
                 event.getActorUsername(),
                 event.getSubject(),
                 event.getIpAddress(),
