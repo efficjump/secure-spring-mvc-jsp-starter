@@ -146,8 +146,6 @@ make down       # 컨테이너 중지, DB 볼륨 보존
 
 로컬에 Java 21이 있다면 `./mvnw test`, `./mvnw clean package`도 사용할 수 있습니다. 산출물은 `target/secure-mvc-starter.war`입니다.
 
-![로그인 화면](docs/images/login.png)
-
 ### 정상 동작 확인
 
 | 주소 | 기대 결과 |

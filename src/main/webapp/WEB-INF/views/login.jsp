@@ -17,12 +17,6 @@
             <h2><spring:message code="login.context.heading.first"/><br><spring:message code="login.context.heading.second"/></h2>
             <p><spring:message code="login.context.description"/></p>
         </div>
-        <spring:message var="loginBaselineLabel" code="login.baseline.label"/>
-        <div class="auth-baseline" aria-label="<c:out value="${loginBaselineLabel}"/>">
-            <span><spring:message code="login.baseline.password"/></span>
-            <span><spring:message code="login.baseline.csrf"/></span>
-            <span><spring:message code="login.baseline.audit"/></span>
-        </div>
     </div>
     <div class="auth-panel">
         <%@ include file="fragments/language-switcher.jspf" %>
