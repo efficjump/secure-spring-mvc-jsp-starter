@@ -211,6 +211,10 @@ a:focus-visible {
   border-color: var(--line);
 }
 
+.status-info {
+  border-color: #cadfed;
+}
+
 .metric-strip {
   margin-bottom: 30px;
   overflow: hidden;
@@ -352,6 +356,7 @@ td strong {
 
 .field input,
 .field select,
+.field textarea,
 .filter-bar input,
 .filter-bar select,
 .role-form select,
@@ -365,6 +370,7 @@ td strong {
 
 .field input,
 .field select,
+.field textarea,
 .filter-bar input,
 .filter-bar select {
   min-height: 42px;
@@ -373,6 +379,7 @@ td strong {
 
 .field input:hover,
 .field select:hover,
+.field textarea:hover,
 .filter-bar input:hover,
 .filter-bar select:hover,
 .role-form select:hover {
@@ -381,6 +388,7 @@ td strong {
 
 .field input:focus,
 .field select:focus,
+.field textarea:focus,
 .filter-bar input:focus,
 .filter-bar select:focus,
 .role-form select:focus {
@@ -773,7 +781,7 @@ td strong {
 
 .workspace-tabbar {
   gap: 2px;
-  padding: 7px 8px 0;
+  padding: 7px 8px;
   background: #f2f3f7;
   border-bottom-color: var(--line-strong);
 }
@@ -788,9 +796,8 @@ td strong {
   overflow: hidden;
   background: transparent;
   border: 1px solid transparent;
-  border-bottom-color: var(--line);
-  border-radius: 9px 9px 0 0;
-  transition: background 120ms ease, border-color 120ms ease;
+  border-radius: 9px;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .workspace-tab:hover {
@@ -800,9 +807,9 @@ td strong {
 
 .workspace-tab.is-active {
   z-index: 1;
-  background: var(--surface-subtle);
-  border-color: var(--line);
-  border-bottom-color: var(--surface-subtle);
+  background: var(--surface);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-xs);
 }
 
 .workspace-tab-button {
@@ -925,7 +932,7 @@ td strong {
   }
 
   .workspace-tabbar {
-    padding: 6px 6px 0;
+    padding: 6px;
   }
 
   .workspace-tab {

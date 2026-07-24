@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -26,7 +28,9 @@ public record LocalizationProperties(
         @NotNull Duration cookieMaxAge,
         @NotBlank @Pattern(regexp = "(?i:lax|strict)") String cookieSameSite,
         boolean cookieSecure,
-        boolean respectAcceptLanguage) {
+        boolean respectAcceptLanguage,
+        @Min(100) @Max(100000) int cacheMaxEntries,
+        @NotNull Duration cacheTtl) {
 
     public LocalizationProperties {
         if (defaultLocale == null) {
@@ -40,6 +44,9 @@ public record LocalizationProperties(
         }
         if (cookieMaxAge == null || cookieMaxAge.isNegative() || cookieMaxAge.isZero()) {
             throw new IllegalArgumentException("app.i18n.cookie-max-age must be positive");
+        }
+        if (cacheTtl == null || cacheTtl.isNegative() || cacheTtl.isZero()) {
+            throw new IllegalArgumentException("app.i18n.cache-ttl must be positive");
         }
 
         defaultLocale = normalize(defaultLocale);

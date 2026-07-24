@@ -98,14 +98,16 @@ management:
 
 app:
   i18n:
-    default-locale: ${APP_I18N_DEFAULT_LOCALE:ko}
-    supported-locales: ${APP_I18N_SUPPORTED_LOCALES:ko,en}
+    default-locale: ${APP_I18N_DEFAULT_LOCALE:en}
+    supported-locales: ${APP_I18N_SUPPORTED_LOCALES:en,ko,zh,ja}
     cookie-name: ${APP_I18N_COOKIE_NAME:APP_LOCALE}
     cookie-path: ${APP_I18N_COOKIE_PATH:/}
     cookie-max-age: ${APP_I18N_COOKIE_MAX_AGE:365d}
     cookie-same-site: ${APP_I18N_COOKIE_SAME_SITE:Lax}
     cookie-secure: ${APP_I18N_COOKIE_SECURE:true}
     respect-accept-language: ${APP_I18N_RESPECT_ACCEPT_LANGUAGE:true}
+    cache-max-entries: ${APP_I18N_CACHE_MAX_ENTRIES:50000}
+    cache-ttl: ${APP_I18N_CACHE_TTL:5m}
   security:
     password:
       algorithm: ${APP_PASSWORD_ALGORITHM:argon2}

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -19,35 +20,34 @@ import org.junit.jupiter.api.Test;
 class MessageBundleConsistencyTest {
 
     @Test
-    void koreanAndEnglishBundlesHaveMatchingNonBlankKeys() throws IOException {
-        Properties korean = load("messages.properties");
-        Properties english = load("messages_en.properties");
+    void allSupportedBundlesHaveMatchingNonBlankKeys() throws IOException {
+        List<Properties> bundles = loadSupportedBundles();
+        Properties english = bundles.getFirst();
 
-        assertThat(english.stringPropertyNames()).containsExactlyInAnyOrderElementsOf(korean.stringPropertyNames());
-        assertThat(korean.stringPropertyNames())
-                .allSatisfy(key -> {
-                    assertThat(korean.getProperty(key)).as("Korean value for %s", key).isNotBlank();
-                    assertThat(english.getProperty(key)).as("English value for %s", key).isNotBlank();
-                });
+        bundles.forEach(bundle -> {
+            assertThat(bundle.stringPropertyNames())
+                    .containsExactlyInAnyOrderElementsOf(english.stringPropertyNames());
+            english.stringPropertyNames()
+                    .forEach(key -> assertThat(bundle.getProperty(key)).as(key).isNotBlank());
+        });
     }
 
     @Test
-    void everyDynamicEnumMessageCodeExistsInBothBundles() throws IOException {
-        Properties korean = load("messages.properties");
-        Properties english = load("messages_en.properties");
+    void everyDynamicEnumMessageCodeExistsInAllBundles() throws IOException {
+        Properties[] bundles = loadSupportedBundles().toArray(Properties[]::new);
 
         Arrays.stream(AuditEventType.values())
                 .map(AuditEventType::getMessageCode)
-                .forEach(code -> assertCodeExists(code, korean, english));
+                .forEach(code -> assertCodeExists(code, bundles));
         Arrays.stream(AuditOutcome.values())
                 .map(AuditOutcome::getMessageCode)
-                .forEach(code -> assertCodeExists(code, korean, english));
+                .forEach(code -> assertCodeExists(code, bundles));
         Arrays.stream(NavigationIcon.values())
                 .map(NavigationIcon::getMessageCode)
-                .forEach(code -> assertCodeExists(code, korean, english));
+                .forEach(code -> assertCodeExists(code, bundles));
         Arrays.stream(Role.values())
                 .map(Role::getMessageCode)
-                .forEach(code -> assertCodeExists(code, korean, english));
+                .forEach(code -> assertCodeExists(code, bundles));
     }
 
     @Test
@@ -103,6 +103,14 @@ class MessageBundleConsistencyTest {
             properties.load(reader);
         }
         return properties;
+    }
+
+    private List<Properties> loadSupportedBundles() throws IOException {
+        return List.of(
+                load("messages.properties"),
+                load("messages_ko.properties"),
+                load("messages_zh.properties"),
+                load("messages_ja.properties"));
     }
 
     private void assertCodeExists(String code, Properties... bundles) {

@@ -78,6 +78,16 @@ class LocalizationIntegrationTest {
     }
 
     @Test
+    void englishIsTheDefaultAndFourBuiltInLanguagesAreAvailable() throws Exception {
+        mockMvc.perform(get("/login").header(HttpHeaders.ACCEPT_LANGUAGE, "fr-FR,fr;q=0.9"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("currentLocaleTag", "en"))
+                .andExpect(model().attribute(
+                        "supportedLanguages",
+                        org.hamcrest.Matchers.hasSize(4)));
+    }
+
+    @Test
     void localeEndpointPreservesSafeInternalQueryString() throws Exception {
         mockMvc.perform(get("/locale")
                         .param("lang", "ko")

@@ -445,6 +445,17 @@ a:focus-visible {
   background: var(--surface-muted);
 }
 
+.status-info {
+  color: var(--info);
+  background: var(--info-soft);
+}
+
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
 .metric-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -661,6 +672,7 @@ td strong,
 
 .field input,
 .field select,
+.field textarea,
 .filter-bar input,
 .filter-bar select,
 .role-form select,
@@ -674,6 +686,7 @@ td strong,
 
 .field input,
 .field select,
+.field textarea,
 .filter-bar input,
 .filter-bar select {
   min-height: 42px;
@@ -682,6 +695,7 @@ td strong,
 
 .field input:hover,
 .field select:hover,
+.field textarea:hover,
 .filter-bar input:hover,
 .filter-bar select:hover,
 .role-form select:hover {
@@ -693,6 +707,36 @@ td strong,
   margin-top: 5px;
   color: var(--danger);
   font-size: 0.76rem;
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.filter-bar-single {
+  grid-template-columns: minmax(220px, 1fr) auto;
+}
+
+.message-key-cell {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+.message-preview {
+  max-width: 520px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.text-button-danger {
+  color: var(--danger);
+}
+
+.translation-editor-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
 }
 
 .help-text {
@@ -1304,7 +1348,7 @@ td strong,
   display: flex;
   align-items: stretch;
   gap: 2px;
-  padding: 6px 8px 0;
+  padding: 7px 8px;
   background: #edf0f4;
   border-bottom: 1px solid var(--line-strong);
 }
@@ -1327,9 +1371,8 @@ td strong,
   overflow: hidden;
   background: transparent;
   border: 1px solid transparent;
-  border-bottom-color: #d8dde5;
-  border-radius: 8px 8px 0 0;
-  transition: background 120ms ease, border-color 120ms ease;
+  border-radius: 8px;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .workspace-tab:hover {
@@ -1339,9 +1382,9 @@ td strong,
 
 .workspace-tab.is-active {
   z-index: 1;
-  background: var(--surface-subtle);
-  border-color: #d8dde5;
-  border-bottom-color: var(--surface-subtle);
+  background: var(--surface);
+  border-color: var(--line-strong);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
 }
 
 .workspace-tab-button {

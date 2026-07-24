@@ -1,12 +1,12 @@
-**English** | [한국어](README.ko.md)
+**English** | [한국어](README.ko.md) | [简体中文](README.zh.md) | [日本語](README.ja.md)
 
 # Secure Spring MVC JSP Starter
 
-Secure Spring MVC JSP Starter is a security-focused baseline for business applications built with Spring MVC, JSP, and MariaDB. It goes beyond a login example by combining account lockout, session revocation, administrator safeguards, security auditing, SQL observation, container hardening, English/Korean localization, and a multi-tab workspace.
+Secure Spring MVC JSP Starter is a security-focused baseline for business applications built with Spring MVC, JSP, and MariaDB. It goes beyond a login example by combining account lockout, session revocation, administrator safeguards, security auditing, SQL observation, container hardening, database-managed localization, and a multi-tab workspace.
 
 The current baseline uses Java 21, Spring Boot 4.1.0, and MariaDB 12.3.2 LTS. The application is packaged as an executable WAR because Spring Boot does not support JSP in an executable JAR.
 
-![English multi-tab business workspace](docs/images/workspace.png)
+![Spring MVC Starter home page](docs/images/home.png)
 
 This starter is designed for internal systems, back-office tools, and operations portals where authentication, authorization, auditing, and administration otherwise have to be rebuilt for every project. It provides application and session invariants, database migrations, operational logs, container execution, and verification standards together with the UI.
 
@@ -17,9 +17,9 @@ This starter is designed for internal systems, back-office tools, and operations
 | Server | Java 21, Spring Boot, Spring MVC, JSP/JSTL, executable WAR |
 | Data | MariaDB, Spring Data JPA, Flyway, HikariCP |
 | Security | Spring Security, Argon2, CSRF, CSP, session limits, account lockout, audit log |
-| Administration | User accounts, sign-in history, active sessions, dynamic menus, password change |
+| Administration | User accounts, sign-in history, active sessions, dynamic menus, localization, password change |
 | Business UI | Full-screen shell, permission-aware navigation, multi-tab content, responsive layout |
-| Localization | Complete English and Korean UI, browser-language detection, secure cookie persistence |
+| Localization | English default, complete English/Korean/Chinese/Japanese UI, runtime language and translation management |
 | Operations | Docker Compose, health probes, separated structured logs, SQL and slow-query observation |
 | Supply chain | Third-party license report, CycloneDX SBOM, automated dependency updates |
 
@@ -34,29 +34,38 @@ This starter is designed for internal systems, back-office tools, and operations
 - Menu search, collapsible sidebar, current-tab refresh, default-tab cleanup, and mobile navigation
 - Toolbars, metric strips, data grids, and editing panels instead of generic card-only administration
 - Semantic CSS tokens with a separate `theme-modern.css` layer for color, density, radius, and elevation
-- Light neutral navigation and rounded workspace tabs connected to the content surface
-- Active tabs distinguished by surface, border, text color, weight, and accessibility state
-- Built-in user, sign-in history, session, menu, and password administration screens
+- Light neutral navigation and compact rounded workspace tabs
+- Active tabs distinguished without accent strips or underline indicators, using surface, text, weight, and accessibility state
+- Built-in user, sign-in history, session, menu, localization, and password administration screens
 
 Business screen URLs come from database menu definitions. Only server-approved internal paths can open in tabs. Tab state remains within the browser session so users can move between list and edit screens without losing their workspace context.
 
-### English and Korean localization
+![English multi-tab business workspace](docs/images/workspace.png)
 
-- Home, sign-in, registration, error, workspace, and every built-in administration screen in English and Korean
-- First-visit language resolution from the allowed `Accept-Language` values, with a configurable fallback
+### Database-managed localization
+
+- English is the default; home, sign-in, registration, errors, workspace, and every administration screen are complete in English, Korean, Simplified Chinese, and Japanese
+- Languages can be registered, edited, ordered, enabled, and selected as the default from the localization administration screen
+- Any bundled message key can be searched and overridden in MariaDB; changes take effect on the next request without a redeploy
+- First-visit language resolution uses active database locales and `Accept-Language`, then falls back to the database default
 - Language selectors in the header, sign-in panel, and workspace
 - Selected locale stored in an `HttpOnly`, `SameSite=Lax` cookie, with `Secure` enabled for production HTTPS
 - Safe query parameters, such as sign-in history filters and pagination, preserved after a language change
 - External URLs, protocol-relative URLs, and unsafe return paths rejected by redirect validation
+- Plain-text validation, `MessageFormat` validation, bounded caching, and immediate cache invalidation after committed administration changes
 - Default database menus translated through `navigation.menu.<menu-key>.label/group`
 - Custom database menu text used as a safe fallback
-- Supported languages, fallback, cookie name, lifetime, security attributes, and browser-language behavior configured through environment variables
+- Environment variables provide an empty-catalog fallback and configure cookie security, browser-language behavior, and cache bounds
 
-To add another language, create `messages_<language-tag>.properties` and add its BCP 47 tag to `APP_I18N_SUPPORTED_LOCALES`. `MessageBundleConsistencyTest` checks that English and Korean bundles contain the same keys, including dynamically generated enum messages.
+To add a language at runtime, register its BCP 47 tag and translations under **Localization**. A static `messages_<language-tag>.properties` bundle is optional but recommended when the new language should ship with a complete reviewed baseline. `MessageBundleConsistencyTest` verifies identical nonblank keys across the four built-in bundles, including generated enum message codes.
 
-| Korean sign-in | English sign-in |
+| English | 한국어 | 简体中文 | 日本語 |
+| --- | --- | --- | --- |
+| ![English sign-in screen](docs/images/login-en.png) | ![Korean sign-in screen](docs/images/login.png) | ![Chinese sign-in screen](docs/images/login-zh.png) | ![Japanese sign-in screen](docs/images/login-ja.png) |
+
+| Language catalog | Translation editor |
 | --- | --- |
-| ![Korean sign-in screen](docs/images/login.png) | ![English sign-in screen](docs/images/login-en.png) |
+| ![Runtime language catalog](docs/images/localization.png) | ![Database translation editor](docs/images/translations.png) |
 
 ### Administration screens
 
@@ -67,6 +76,7 @@ To add another language, create `messages_<language-tag>.properties` and add its
 | Sign-in history | Review success/failure, request ID, timestamp, and remote address | Administrator |
 | Session management | Inspect active sessions and revoke selected sessions | Administrator |
 | Menu management | Edit group, order, internal path, role, and visibility | Administrator |
+| Localization | Register languages, choose the default, and edit database message overrides | Administrator |
 | Change password | Verify the current password, enforce policy, then expire every session | User |
 
 ### Authentication and account invariants
@@ -104,6 +114,7 @@ To add another language, create `messages_<language-tag>.properties` and add its
 - MariaDB slow-query table enabled for local observation
 - Security events recorded in both the database and dedicated audit log
 - Dynamic menus introduced through Flyway V2 with audited administration changes
+- Runtime language and message catalogs introduced through Flyway V3 with audited changes and bounded caches
 - Public Actuator health/info endpoints and administrator-restricted management endpoints
 - Graceful shutdown, liveness/readiness probes, non-root user, and read-only application container
 
@@ -132,7 +143,7 @@ make up
 After the containers become healthy:
 
 1. Sign in at `http://127.0.0.1:8080/login` with `APP_BOOTSTRAP_ADMIN_USERNAME` and `APP_BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
-2. Verify that English and Korean switch immediately and remain selected after refresh.
+2. Verify that English, Korean, Chinese, and Japanese switch immediately and remain selected after refresh.
 3. Change the temporary password. The change expires all existing sessions.
 4. Set `APP_BOOTSTRAP_ADMIN_ENABLED=false` before the next start.
 5. Run the smoke checks.
@@ -169,7 +180,7 @@ Use `make logs` to inspect both application and database output. `make down` pre
 1. Update `groupId`, `artifactId`, `name`, and `finalName` in `pom.xml`.
 2. Rename `com.example.webstarter` to the organization’s reverse-domain package.
 3. Replace product copy in `messages*.properties` and adjust semantic design tokens in `theme-modern.css`. Keep structural behavior in `app.css`.
-4. Keep `V1__create_security_baseline.sql` and `V2__create_navigation_menus.sql` immutable. Add business tables in a new Flyway version.
+4. Keep the existing `V1` through `V3` Flyway migrations immutable. Add business tables in a new migration version.
 5. If authorization extends beyond `USER` and `ADMIN`, introduce capability-oriented roles and update service-level `@PreAuthorize` rules.
 6. Complete the [security checklist](docs/SECURITY-CHECKLIST.md) and [operations guide](docs/OPERATIONS.md) before deployment.
 
@@ -186,6 +197,7 @@ src/main/java/com/example/webstarter
 ├── audit        Database and file security events
 ├── bootstrap    One-time administrator creation
 ├── navigation   Database menus, safe paths, role filtering, and localization
+├── localization Runtime locale catalog, message overrides, validation, and caching
 └── web          MVC, locale handling, request IDs, headers, and access logs
 ```
 
@@ -199,7 +211,7 @@ Runtime values are not embedded in application code. Every operational setting i
 | --- | --- | --- |
 | Database | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_POOL_MAX_SIZE` | External secrets and a bounded pool |
 | Session | `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAME_SITE`, `SESSION_TIMEOUT`, `APP_SESSION_METADATA_MAX_ENTRIES` | Production HTTPS, 30 minutes, Lax, bounded metadata |
-| Localization | `APP_I18N_DEFAULT_LOCALE`, `APP_I18N_SUPPORTED_LOCALES`, `APP_I18N_COOKIE_*` | Allowlisted locales and secure production cookie |
+| Localization | `APP_I18N_DEFAULT_LOCALE`, `APP_I18N_SUPPORTED_LOCALES`, `APP_I18N_COOKIE_*`, `APP_I18N_CACHE_*` | Database catalog with an English fallback, secure cookie, and bounded caches |
 | Password hashing | `APP_PASSWORD_ALGORITHM`, `APP_ARGON2_*` | Argon2 with startup validation |
 | Sign-in protection | `APP_LOGIN_*`, `APP_ACCOUNT_LOCK_*` | IP/identifier limits and account lockout |
 | Headers | `APP_CONTENT_SECURITY_POLICY`, `APP_FRAME_OPTIONS`, `APP_PERMISSIONS_POLICY`, `APP_HSTS_*` | External framing blocked and same-origin workspace tabs allowed |

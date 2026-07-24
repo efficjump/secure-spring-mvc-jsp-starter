@@ -17,7 +17,7 @@ set +a
 base_url="${SMOKE_BASE_URL:-http://${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}}"
 health_url="$base_url/internal/actuator/health"
 login_url="$base_url/login"
-smoke_locale="${APP_I18N_DEFAULT_LOCALE:-ko}"
+smoke_locale="${APP_I18N_DEFAULT_LOCALE:-en}"
 locale_cookie_name="${APP_I18N_COOKIE_NAME:-APP_LOCALE}"
 locale_url="$base_url/locale?lang=$smoke_locale&returnTo=%2Flogin"
 cookie_jar=$(mktemp)

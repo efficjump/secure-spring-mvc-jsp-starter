@@ -6,8 +6,7 @@
 
 <section class="hero">
     <div>
-        <p class="eyebrow"><spring:message code="home.eyebrow"/></p>
-        <h1><spring:message code="home.heading.first"/><br><spring:message code="home.heading.second"/></h1>
+        <h1><spring:message code="home.heading"/></h1>
         <p class="lead"><spring:message code="home.description"/></p>
         <div class="button-row">
             <sec:authorize access="isAnonymous()">
@@ -20,22 +19,6 @@
             </sec:authorize>
         </div>
     </div>
-</section>
-
-<spring:message var="homeFeaturesLabel" code="home.features.label"/>
-<section class="feature-grid" aria-label="<c:out value="${homeFeaturesLabel}"/>">
-    <article class="feature-card">
-        <h2><spring:message code="home.feature.authentication.title"/></h2>
-        <p><spring:message code="home.feature.authentication.description"/></p>
-    </article>
-    <article class="feature-card">
-        <h2><spring:message code="home.feature.request.title"/></h2>
-        <p><spring:message code="home.feature.request.description"/></p>
-    </article>
-    <article class="feature-card">
-        <h2><spring:message code="home.feature.workspace.title"/></h2>
-        <p><spring:message code="home.feature.workspace.description"/></p>
-    </article>
 </section>
 
 <%@ include file="fragments/footer.jspf" %>

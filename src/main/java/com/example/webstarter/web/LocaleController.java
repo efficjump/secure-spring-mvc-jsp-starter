@@ -6,7 +6,7 @@ import java.net.URISyntaxException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.example.webstarter.config.LocalizationProperties;
+import com.example.webstarter.localization.LocaleCatalogService;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,13 +20,13 @@ public class LocaleController {
     private static final String DEFAULT_RETURN_PATH = "/";
 
     private final LocaleResolver localeResolver;
-    private final LocalizationProperties properties;
+    private final LocaleCatalogService localeCatalogService;
 
     public LocaleController(
             LocaleResolver localeResolver,
-            LocalizationProperties properties) {
+            LocaleCatalogService localeCatalogService) {
         this.localeResolver = localeResolver;
-        this.properties = properties;
+        this.localeCatalogService = localeCatalogService;
     }
 
     @GetMapping("/locale")
@@ -35,7 +35,7 @@ public class LocaleController {
             @RequestParam(defaultValue = DEFAULT_RETURN_PATH) String returnTo,
             HttpServletRequest request,
             HttpServletResponse response) {
-        properties.findSupported(lang)
+        localeCatalogService.findEnabled(lang)
                 .ifPresent(locale -> localeResolver.setLocale(request, response, locale));
 
         RedirectView redirectView = new RedirectView(safeReturnPath(returnTo));

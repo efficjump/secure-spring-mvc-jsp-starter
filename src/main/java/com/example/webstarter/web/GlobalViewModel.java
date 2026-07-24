@@ -5,8 +5,8 @@ import java.util.Locale;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import com.example.webstarter.config.LocalizationProperties;
 import com.example.webstarter.config.SecurityProperties;
+import com.example.webstarter.localization.LocaleCatalogService;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalViewModel {
 
     private final SecurityProperties securityProperties;
-    private final LocalizationProperties localizationProperties;
+    private final LocaleCatalogService localeCatalogService;
 
     public GlobalViewModel(
             SecurityProperties securityProperties,
-            LocalizationProperties localizationProperties) {
+            LocaleCatalogService localeCatalogService) {
         this.securityProperties = securityProperties;
-        this.localizationProperties = localizationProperties;
+        this.localeCatalogService = localeCatalogService;
     }
 
     @ModelAttribute("registrationEnabled")
@@ -47,11 +47,11 @@ public class GlobalViewModel {
 
     @ModelAttribute("supportedLanguages")
     public List<LanguageOption> supportedLanguages(Locale currentLocale) {
-        return localizationProperties.supportedLocales().stream()
+        return localeCatalogService.enabledLocales().stream()
                 .map(locale -> new LanguageOption(
-                        locale.toLanguageTag(),
-                        locale.getDisplayLanguage(currentLocale),
-                        locale.equals(currentLocale)))
+                        locale.languageTag(),
+                        locale.nativeName(),
+                        locale.languageTag().equalsIgnoreCase(currentLocale.toLanguageTag())))
                 .toList();
     }
 

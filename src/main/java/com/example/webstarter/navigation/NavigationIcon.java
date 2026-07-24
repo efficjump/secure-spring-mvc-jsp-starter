@@ -8,6 +8,7 @@ public enum NavigationIcon {
     LOGIN_HISTORY("login-history"),
     SESSIONS("sessions"),
     MENUS("menus"),
+    LANGUAGES("languages"),
     SECURITY("security"),
     DOCUMENT("document"),
     SETTINGS("settings");

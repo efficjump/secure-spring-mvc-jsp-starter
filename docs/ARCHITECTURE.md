@@ -34,20 +34,25 @@ flowchart LR
 
 ## 다국어 요청 흐름
 
-`CookieLocaleResolver`는 설정된 언어 쿠키를 가장 먼저 확인합니다. 쿠키가 없는 첫 요청에는 `APP_I18N_SUPPORTED_LOCALES` 안에서 브라우저 `Accept-Language`와 가장 가까운 언어를 선택하고, 일치하지 않으면 `APP_I18N_DEFAULT_LOCALE`을 사용합니다. 임의 로케일이 파일명이나 메시지 조회 경로로 전달되지 않도록 `/locale`은 허용 목록의 정확한 BCP 47 태그만 받아들이며, 클라이언트가 쿠키 값을 직접 바꾸더라도 허용 목록에 매핑되지 않으면 같은 기본 선택 흐름으로 되돌립니다.
+`CookieLocaleResolver`는 언어 쿠키를 가장 먼저 확인합니다. 사용할 수 있는 언어와 기본 언어는 `supported_locales`에서 읽기 때문에 관리 화면에서 등록·수정·활성화하거나 기본값을 바꾸면 재배포 없이 다음 요청부터 반영됩니다. DB 카탈로그가 비어 있는 초기화·테스트 상황에만 `APP_I18N_SUPPORTED_LOCALES`와 `APP_I18N_DEFAULT_LOCALE`을 안전한 대체 목록으로 사용합니다.
+
+쿠키가 없는 첫 요청에는 활성 언어 안에서 브라우저 `Accept-Language`와 가장 가까운 항목을 선택하고, 일치하지 않으면 DB의 기본 언어를 사용합니다. 임의 로케일이 메시지 조회 경로로 전달되지 않도록 `/locale`은 활성 카탈로그의 정확한 BCP 47 태그만 받아들이며, 클라이언트가 쿠키 값을 직접 바꾸더라도 활성 목록에 매핑되지 않으면 같은 기본 선택 흐름으로 되돌립니다.
 
 ```mermaid
 flowchart LR
     A["브라우저 요청"] --> B{"언어 쿠키"}
-    B -->|"있음"| C["허용 로케일 적용"]
+    B -->|"있음"| C["DB 활성 로케일 적용"]
     B -->|"없음"| D{"브라우저 언어와 일치"}
     D -->|"일치"| C
-    D -->|"불일치"| E["설정된 기본 로케일"]
-    C --> F["메시지 번들 + 기본 메뉴 번역"]
+    D -->|"불일치"| E["DB 기본 로케일"]
+    C --> F["DB 번역 오버라이드"]
     E --> F
+    F --> G["정적 메시지 번들 대체"]
 ```
 
-언어 선택 링크는 현재 애플리케이션 경로와 쿼리를 반환 주소로 전달합니다. `LocaleController`가 스킴·호스트·프래그먼트·경로 이동·역슬래시·개행을 거부한 뒤에만 리다이렉트하므로 열린 리다이렉트로 사용할 수 없습니다. 기본 메뉴는 메뉴 키를 메시지 키로 변환해 번역하고, 메시지가 없는 사용자 정의 메뉴는 DB에 저장된 이름과 그룹을 그대로 사용합니다. 탭 복원 데이터에는 메뉴 키만 남기므로 언어를 바꾼 뒤 셸을 다시 읽으면 열린 탭도 새 메뉴 이름으로 재구성됩니다.
+언어 선택 링크는 현재 애플리케이션 경로와 쿼리를 반환 주소로 전달합니다. `LocaleController`가 스킴·호스트·프래그먼트·경로 이동·역슬래시·개행을 거부한 뒤에만 리다이렉트하므로 열린 리다이렉트로 사용할 수 없습니다. `DatabaseMessageSource`는 활성 언어의 `localized_messages` 값을 먼저 조회하고, 값이 없으면 클래스패스 번들로 대체합니다. 조회 결과는 크기와 수명이 제한된 캐시에 보관하고 관리 화면에서 변경한 트랜잭션이 커밋되면 즉시 비웁니다.
+
+동적 번역은 모든 화면에서 일반 텍스트로 사용되므로 저장 전에 HTML 괄호와 제어 문자를 거부하고 `MessageFormat` 치환식도 검증합니다. 기본 메뉴는 메뉴 키를 메시지 키로 변환해 번역하고, 메시지가 없는 사용자 정의 메뉴는 DB에 저장된 이름과 그룹을 그대로 사용합니다. 탭 복원 데이터에는 메뉴 키만 남기므로 언어를 바꾼 뒤 셸을 다시 읽으면 열린 탭도 새 메뉴 이름으로 재구성됩니다.
 
 ## 전체 화면 업무 셸과 탭 경계
 
@@ -98,6 +103,7 @@ flowchart LR
 ```mermaid
 erDiagram
     APP_USERS ||--o{ APP_USER_ROLES : has
+    SUPPORTED_LOCALES ||--o{ LOCALIZED_MESSAGES : contains
     APP_USERS {
         bigint id PK
         varchar username UK
@@ -132,6 +138,22 @@ erDiagram
         boolean enabled
         bigint version
     }
+    SUPPORTED_LOCALES {
+        bigint id PK
+        varchar language_tag UK
+        varchar native_name
+        int display_order
+        boolean enabled
+        boolean default_locale
+        bigint version
+    }
+    LOCALIZED_MESSAGES {
+        bigint id PK
+        bigint locale_id FK
+        varchar message_key UK
+        varchar message_value
+        bigint version
+    }
 ```
 
 모든 시간은 애플리케이션에서 `Instant`로 다루고 Hibernate JDBC 시간대를 UTC로 고정합니다. 화면 표시 시간대는 서비스 정책에 맞는 변환 계층을 추가해야 합니다. 엔티티에는 낙관적 잠금용 `version`이 있고, 로그인 실패·관리자 변경처럼 경쟁이 중요한 작업은 명시적인 비관적 잠금을 함께 사용합니다.
@@ -139,7 +161,7 @@ erDiagram
 ## 로그와 감사의 구분
 
 - `application.log`: 시작, 종료, HTTP 접근, 애플리케이션 오류
-- `security-audit.log`: 로그인, 로그아웃, 접근 거부, 비밀번호/역할/상태 변경
+- `security-audit.log`: 로그인, 로그아웃, 접근 거부, 비밀번호/역할/상태와 언어·번역 변경
 - `sql.log`: Hibernate가 실행한 SQL 문장. 바인드 값은 별도 설정이며 기본 OFF
 - `security_audit_events`: 관리 화면이나 조사 도구에서 검색할 수 있는 구조화된 감사 원본
 - `mysql.slow_log`: DB가 실제 실행 시간 기준으로 수집한 느린 쿼리
