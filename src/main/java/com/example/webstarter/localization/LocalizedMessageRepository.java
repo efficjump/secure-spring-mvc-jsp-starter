@@ -11,9 +11,9 @@ public interface LocalizedMessageRepository extends JpaRepository<LocalizedMessa
 
     Optional<LocalizedMessage> findByLocaleIdAndMessageKey(Long localeId, String messageKey);
 
-    List<LocalizedMessage> findAllByLocaleIdOrderByMessageKeyAsc(Long localeId);
+    List<LocalizedMessage> findAllByOrderByMessageKeyAsc();
 
-    void deleteAllByLocaleId(Long localeId);
+    List<LocalizedMessage> findAllByMessageKey(String messageKey);
 
     @Query("""
             select m.messageValue

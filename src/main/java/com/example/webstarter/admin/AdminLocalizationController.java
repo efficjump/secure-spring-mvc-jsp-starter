@@ -8,16 +8,18 @@ import com.example.webstarter.audit.AuditOutcome;
 import com.example.webstarter.audit.RequestMetadata;
 import com.example.webstarter.audit.SecurityAuditService;
 import com.example.webstarter.config.AdminProperties;
-import com.example.webstarter.localization.LocalizedMessageForm;
-import com.example.webstarter.localization.LocalizedMessageSummary;
 import com.example.webstarter.localization.LocaleCatalogService;
 import com.example.webstarter.localization.LocalizationOperationException;
 import com.example.webstarter.localization.SupportedLocaleForm;
 import com.example.webstarter.localization.SupportedLocaleSummary;
 import com.example.webstarter.localization.TranslationCatalogService;
+import com.example.webstarter.localization.TranslationGridRow;
+import com.example.webstarter.localization.TranslationGridRowForm;
+import com.example.webstarter.localization.TranslationRowUpdateResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -79,7 +81,6 @@ public class AdminLocalizationController {
             SupportedLocaleSummary created = localeCatalogService.create(form);
             audit(AuditEventType.LOCALE_CREATED, authentication.getName(), created.languageTag(), request);
             redirectAttributes.addFlashAttribute("message", "admin.locale.created");
-            redirectAttributes.addAttribute("edit", created.id());
             return "redirect:/admin/locales";
         } catch (LocalizationOperationException exception) {
             bindingResult.reject(exception.getMessage());
@@ -103,7 +104,6 @@ public class AdminLocalizationController {
             SupportedLocaleSummary updated = localeCatalogService.update(localeId, form);
             audit(AuditEventType.LOCALE_UPDATED, authentication.getName(), updated.languageTag(), request);
             redirectAttributes.addFlashAttribute("message", "admin.locale.updated");
-            redirectAttributes.addAttribute("edit", localeId);
             return "redirect:/admin/locales";
         } catch (LocalizationOperationException exception) {
             bindingResult.reject(exception.getMessage());
@@ -148,77 +148,64 @@ public class AdminLocalizationController {
         return "redirect:/admin/locales";
     }
 
-    @GetMapping("/{localeId}/messages")
+    @GetMapping("/messages")
     public String messages(
-            @PathVariable Long localeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(required = false) String edit,
             Model model) {
-        if (!model.containsAttribute("messageForm")) {
-            model.addAttribute("messageForm", translationCatalogService.formFor(localeId, edit));
+        if (!model.containsAttribute("translationRowForm")) {
+            model.addAttribute("translationRowForm", new TranslationGridRowForm());
         }
-        return renderMessages(model, localeId, page, search, edit);
+        return renderMessages(model, page, search, null);
     }
 
-    @PostMapping("/{localeId}/messages")
-    public String saveMessage(
-            @PathVariable Long localeId,
+    @PostMapping("/messages")
+    public String saveMessageRow(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "") String search,
-            @Valid @ModelAttribute("messageForm") LocalizedMessageForm form,
+            @Valid @ModelAttribute("translationRowForm") TranslationGridRowForm form,
             BindingResult bindingResult,
             Authentication authentication,
             HttpServletRequest request,
             Model model,
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            return renderMessages(model, localeId, page, search, form.getMessageKey());
+            return renderMessages(model, page, search, form.getMessageKey());
         }
         try {
-            LocalizedMessageSummary saved = translationCatalogService.save(localeId, form);
-            SupportedLocaleSummary locale = localeCatalogService.get(localeId);
-            audit(
-                    AuditEventType.TRANSLATION_UPDATED,
-                    authentication.getName(),
-                    locale.languageTag() + ":" + saved.messageKey(),
-                    request);
-            redirectAttributes.addFlashAttribute("message", "admin.translation.updated");
-            redirectAttributes.addAttribute("edit", saved.messageKey());
+            TranslationRowUpdateResult result = translationCatalogService.saveRow(form);
+            if (result.changed()) {
+                AuditEventType eventType = result.updatedCount() > 0
+                        ? AuditEventType.TRANSLATION_UPDATED
+                        : AuditEventType.TRANSLATION_DELETED;
+                audit(eventType, authentication.getName(), result.messageKey(), request);
+                redirectAttributes.addFlashAttribute("message", "admin.translation.row.updated");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "admin.translation.noChanges");
+            }
+            redirectAttributes.addAttribute("page", Math.max(0, page));
             if (!search.isBlank()) {
                 redirectAttributes.addAttribute("search", search);
             }
-            return "redirect:/admin/locales/" + localeId + "/messages";
+            return "redirect:/admin/locales/messages";
         } catch (LocalizationOperationException exception) {
             bindingResult.reject(exception.getMessage());
-            return renderMessages(model, localeId, page, search, form.getMessageKey());
+            return renderMessages(model, page, search, form.getMessageKey());
         }
     }
 
-    @PostMapping("/{localeId}/messages/delete")
-    public String deleteMessage(
+    @GetMapping("/{localeId}/messages")
+    public String legacyMessages(
             @PathVariable Long localeId,
-            @RequestParam String messageKey,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "") String search,
-            Authentication authentication,
-            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
-        try {
-            SupportedLocaleSummary locale = localeCatalogService.get(localeId);
-            translationCatalogService.delete(localeId, messageKey);
-            audit(
-                    AuditEventType.TRANSLATION_DELETED,
-                    authentication.getName(),
-                    locale.languageTag() + ":" + messageKey,
-                    request);
-            redirectAttributes.addFlashAttribute("message", "admin.translation.deleted");
-        } catch (LocalizationOperationException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
-        }
+        localeCatalogService.get(localeId);
+        redirectAttributes.addAttribute("page", Math.max(0, page));
         if (!search.isBlank()) {
             redirectAttributes.addAttribute("search", search);
         }
-        return "redirect:/admin/locales/" + localeId + "/messages";
+        return "redirect:/admin/locales/messages";
     }
 
     private String renderLocales(Model model, Long editingLocaleId) {
@@ -229,21 +216,25 @@ public class AdminLocalizationController {
 
     private String renderMessages(
             Model model,
-            Long localeId,
             int page,
             String search,
-            String editingMessageKey) {
-        SupportedLocaleSummary locale = localeCatalogService.get(localeId);
-        model.addAttribute("locale", locale);
-        model.addAttribute(
-                "messages",
-                translationCatalogService.list(
-                        localeId,
-                        page,
-                        adminProperties.pageSize(),
-                        search));
+            String failedMessageKey) {
+        var locales = localeCatalogService.listAll();
+        Page<TranslationGridRow> messages = translationCatalogService.listGrid(
+                locales,
+                page,
+                adminProperties.pageSize(),
+                search);
+        model.addAttribute("locales", locales);
+        model.addAttribute("messages", messages);
+        model.addAttribute("newTranslationCells", translationCatalogService.emptyCells(locales));
         model.addAttribute("search", search);
-        model.addAttribute("editingMessageKey", editingMessageKey);
+        model.addAttribute("failedMessageKey", failedMessageKey);
+        model.addAttribute(
+                "failedRowOnPage",
+                failedMessageKey != null
+                        && messages.getContent().stream()
+                                .anyMatch(row -> row.messageKey().equals(failedMessageKey)));
         return "admin/translations";
     }
 

@@ -3,6 +3,7 @@ package com.example.webstarter.localization;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.AfterEach;
@@ -92,11 +93,12 @@ class LocalizationManagementServiceIntegrationTest {
                 "Japanese",
                 "日本語",
                 100));
-        LocalizedMessageForm form = new LocalizedMessageForm();
-        form.setMessageKey("custom.greeting");
-        form.setMessageValue("最初のメッセージ");
+        TranslationGridRowForm form = translationForm(
+                "custom.greeting",
+                japanese.id(),
+                "最初のメッセージ");
 
-        translationCatalogService.save(japanese.id(), form);
+        translationCatalogService.saveRow(form);
         assertThat(messageSource.getMessage(
                 "custom.greeting",
                 null,
@@ -104,8 +106,8 @@ class LocalizationManagementServiceIntegrationTest {
                 Locale.JAPANESE))
                 .isEqualTo("最初のメッセージ");
 
-        form.setMessageValue("更新したメッセージ");
-        translationCatalogService.save(japanese.id(), form);
+        form.getValues().put(japanese.id(), "更新したメッセージ");
+        translationCatalogService.saveRow(form);
         assertThat(messageSource.getMessage(
                 "custom.greeting",
                 null,
@@ -113,13 +115,44 @@ class LocalizationManagementServiceIntegrationTest {
                 Locale.JAPANESE))
                 .isEqualTo("更新したメッセージ");
 
-        translationCatalogService.delete(japanese.id(), "custom.greeting");
+        form.getValues().put(japanese.id(), "");
+        translationCatalogService.saveRow(form);
         assertThat(messageSource.getMessage(
                 "custom.greeting",
                 null,
                 "fallback",
                 Locale.JAPANESE))
                 .isEqualTo("fallback");
+    }
+
+    @Test
+    void translationGridListsEveryLocaleBesideTheMessageKey() {
+        SupportedLocaleSummary english = localeCatalogService.create(localeForm(
+                "en",
+                "English",
+                "English",
+                100));
+        SupportedLocaleSummary korean = localeCatalogService.create(localeForm(
+                "ko",
+                "Korean",
+                "한국어",
+                200));
+
+        var page = translationCatalogService.listGrid(
+                List.of(english, korean),
+                0,
+                20,
+                "home.heading");
+
+        assertThat(page.getContent()).singleElement().satisfies(row -> {
+            assertThat(row.messageKey()).isEqualTo("home.heading");
+            assertThat(row.cells())
+                    .extracting(TranslationGridCell::languageTag)
+                    .containsExactly("en", "ko");
+            assertThat(row.cells())
+                    .extracting(TranslationGridCell::value)
+                    .containsExactly("Spring MVC Starter", "Spring MVC Starter");
+        });
     }
 
     @Test
@@ -130,19 +163,31 @@ class LocalizationManagementServiceIntegrationTest {
                 "中文",
                 100));
 
-        LocalizedMessageForm html = new LocalizedMessageForm();
-        html.setMessageKey("custom.unsafe");
-        html.setMessageValue("<strong>unsafe</strong>");
-        assertThatThrownBy(() -> translationCatalogService.save(chinese.id(), html))
+        TranslationGridRowForm html = translationForm(
+                "custom.unsafe",
+                chinese.id(),
+                "<strong>unsafe</strong>");
+        assertThatThrownBy(() -> translationCatalogService.saveRow(html))
                 .isInstanceOf(LocalizationOperationException.class)
                 .hasMessage("localization.error.htmlNotAllowed");
 
-        LocalizedMessageForm invalidFormat = new LocalizedMessageForm();
-        invalidFormat.setMessageKey("custom.invalid");
-        invalidFormat.setMessageValue("Broken placeholder {0");
-        assertThatThrownBy(() -> translationCatalogService.save(chinese.id(), invalidFormat))
+        TranslationGridRowForm invalidFormat = translationForm(
+                "custom.invalid",
+                chinese.id(),
+                "Broken placeholder {0");
+        assertThatThrownBy(() -> translationCatalogService.saveRow(invalidFormat))
                 .isInstanceOf(LocalizationOperationException.class)
                 .hasMessage("localization.error.invalidPattern");
+    }
+
+    private TranslationGridRowForm translationForm(
+            String messageKey,
+            Long localeId,
+            String messageValue) {
+        TranslationGridRowForm form = new TranslationGridRowForm();
+        form.setMessageKey(messageKey);
+        form.getValues().put(localeId, messageValue);
+        return form;
     }
 
     private SupportedLocaleForm localeForm(

@@ -45,8 +45,9 @@ Business screen URLs come from database menu definitions. Only server-approved i
 ### Database-managed localization
 
 - English is the default; home, sign-in, registration, errors, workspace, and every administration screen are complete in English, Korean, Simplified Chinese, and Japanese
-- Languages can be registered, edited, ordered, enabled, and selected as the default from the localization administration screen
-- Any bundled message key can be searched and overridden in MariaDB; changes take effect on the next request without a redeploy
+- Language tags, names, order, and availability are edited directly in the language grid; each row saves independently
+- The translation matrix places message keys in rows and every registered language in columns, so several languages can be compared and edited together
+- Any bundled message key can be overridden in MariaDB; clearing a cell restores its bundle value, and committed changes take effect on the next request
 - First-visit language resolution uses active database locales and `Accept-Language`, then falls back to the database default
 - Language selectors in the header, sign-in panel, and workspace
 - Selected locale stored in an `HttpOnly`, `SameSite=Lax` cookie, with `Secure` enabled for production HTTPS
@@ -57,15 +58,15 @@ Business screen URLs come from database menu definitions. Only server-approved i
 - Custom database menu text used as a safe fallback
 - Environment variables provide an empty-catalog fallback and configure cookie security, browser-language behavior, and cache bounds
 
-To add a language at runtime, register its BCP 47 tag and translations under **Localization**. A static `messages_<language-tag>.properties` bundle is optional but recommended when the new language should ship with a complete reviewed baseline. `MessageBundleConsistencyTest` verifies identical nonblank keys across the four built-in bundles, including generated enum message codes.
+To add a language at runtime, enter its BCP 47 tag in the new row under **Localization**, then fill its column in the translation matrix. Save one message row after editing several languages, or press `Ctrl/⌘ + Enter` from a translation cell. A static `messages_<language-tag>.properties` bundle is optional but recommended when the new language should ship with a complete reviewed baseline. `MessageBundleConsistencyTest` verifies identical nonblank keys across the four built-in bundles, including generated enum message codes.
 
 | English | 한국어 | 简体中文 | 日本語 |
 | --- | --- | --- | --- |
 | ![English sign-in screen](docs/images/login-en.png) | ![Korean sign-in screen](docs/images/login.png) | ![Chinese sign-in screen](docs/images/login-zh.png) | ![Japanese sign-in screen](docs/images/login-ja.png) |
 
-| Language catalog | Translation editor |
+| Inline language grid | Multi-language translation matrix |
 | --- | --- |
-| ![Runtime language catalog](docs/images/localization.png) | ![Database translation editor](docs/images/translations.png) |
+| ![Inline runtime language grid](docs/images/localization.png) | ![Database translation matrix](docs/images/translations.png) |
 
 ### Administration screens
 
@@ -76,7 +77,7 @@ To add a language at runtime, register its BCP 47 tag and translations under **L
 | Sign-in history | Review success/failure, request ID, timestamp, and remote address | Administrator |
 | Session management | Inspect active sessions and revoke selected sessions | Administrator |
 | Menu management | Edit group, order, internal path, role, and visibility | Administrator |
-| Localization | Register languages, choose the default, and edit database message overrides | Administrator |
+| Localization | Edit language rows and the message-by-language translation matrix | Administrator |
 | Change password | Verify the current password, enforce policy, then expire every session | User |
 
 ### Authentication and account invariants

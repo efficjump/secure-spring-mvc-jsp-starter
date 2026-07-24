@@ -337,6 +337,50 @@ td strong {
   box-shadow: var(--shadow-xs);
 }
 
+.editable-grid-shell {
+  border-color: var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.editable-grid-toolbar {
+  padding: 12px 16px;
+  background: #f7f8fb;
+  border-color: var(--line);
+}
+
+.grid-input,
+.grid-textarea {
+  background: #fbfcfe;
+  border-color: var(--line-strong);
+}
+
+.grid-input:focus,
+.grid-textarea:focus {
+  box-shadow: var(--focus-ring);
+}
+
+.grid-input.is-dirty,
+.grid-textarea.is-dirty {
+  background: #fffdf7;
+  border-color: #d3a63c;
+}
+
+.editable-grid tbody tr.is-dirty > td,
+.editable-grid tbody tr.is-dirty > th {
+  background: #fffaf0;
+}
+
+.editable-grid tbody tr.grid-row-invalid > td,
+.editable-grid tbody tr.grid-row-invalid > th {
+  background: #fff4f5;
+}
+
+.translation-grid thead .sticky-key-column,
+.translation-grid thead .sticky-action-column {
+  background: #f8f9fb;
+}
+
 .field,
 .field-grid {
   margin-bottom: 18px;
@@ -921,6 +965,16 @@ td strong {
 
   .page-toolbar {
     gap: 16px;
+  }
+
+  .editable-grid-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .translation-grid-wrap {
+    max-height: calc(100vh - 270px);
   }
 
   .metric-strip {

@@ -3,14 +3,17 @@ package com.example.webstarter.localization;
 import java.text.MessageFormat;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -33,116 +36,165 @@ public class TranslationCatalogService {
     private final SupportedLocaleRepository localeRepository;
     private final LocalizedMessageRepository messageRepository;
     private final MessageKeyCatalog messageKeyCatalog;
-    private final MessageSource messageSource;
-    private final DatabaseMessageSource databaseMessageSource;
+    private final DatabaseMessageSource messageSource;
     private final Clock clock;
 
     public TranslationCatalogService(
             SupportedLocaleRepository localeRepository,
             LocalizedMessageRepository messageRepository,
             MessageKeyCatalog messageKeyCatalog,
-            MessageSource messageSource,
-            DatabaseMessageSource databaseMessageSource,
+            DatabaseMessageSource messageSource,
             Clock clock) {
         this.localeRepository = localeRepository;
         this.messageRepository = messageRepository;
         this.messageKeyCatalog = messageKeyCatalog;
         this.messageSource = messageSource;
-        this.databaseMessageSource = databaseMessageSource;
         this.clock = clock;
     }
 
     @Transactional(readOnly = true)
-    public Page<LocalizedMessageSummary> list(
-            Long localeId,
+    public Page<TranslationGridRow> listGrid(
+            List<SupportedLocaleSummary> locales,
             int requestedPage,
             int pageSize,
             String search) {
-        SupportedLocale locale = findLocale(localeId);
-        Map<String, String> overrides = new LinkedHashMap<>();
-        messageRepository.findAllByLocaleIdOrderByMessageKeyAsc(localeId)
-                .forEach(message -> overrides.put(message.getMessageKey(), message.getMessageValue()));
-
+        Map<Long, Map<String, String>> overridesByLocale = new HashMap<>();
         Set<String> keys = new TreeSet<>(messageKeyCatalog.keys());
-        keys.addAll(overrides.keySet());
+        messageRepository.findAllByOrderByMessageKeyAsc().forEach(message -> {
+            overridesByLocale
+                    .computeIfAbsent(message.getLocale().getId(), ignored -> new HashMap<>())
+                    .put(message.getMessageKey(), message.getMessageValue());
+            keys.add(message.getMessageKey());
+        });
+
         String normalizedSearch = normalizeSearch(search);
-        Locale targetLocale = locale.toLocale();
-        ArrayList<LocalizedMessageSummary> matches = new ArrayList<>();
+        ArrayList<TranslationGridRow> matches = new ArrayList<>();
         for (String key : keys) {
-            String resolved = overrides.containsKey(key)
-                    ? overrides.get(key)
-                    : messageSource.getMessage(key, null, key, targetLocale);
-            if (normalizedSearch.isBlank()
-                    || key.toLowerCase(Locale.ROOT).contains(normalizedSearch)
-                    || resolved.toLowerCase(Locale.ROOT).contains(normalizedSearch)) {
-                matches.add(new LocalizedMessageSummary(key, resolved, overrides.containsKey(key)));
+            ArrayList<TranslationGridCell> cells = new ArrayList<>();
+            boolean rowMatches = normalizedSearch.isBlank()
+                    || key.toLowerCase(Locale.ROOT).contains(normalizedSearch);
+            for (SupportedLocaleSummary locale : locales) {
+                Map<String, String> localeOverrides =
+                        overridesByLocale.getOrDefault(locale.id(), Map.of());
+                boolean overridden = localeOverrides.containsKey(key);
+                String value = overridden
+                        ? localeOverrides.get(key)
+                        : messageSource.resolveBundle(key, locale.toLocale()).orElse("");
+                if (!rowMatches && value.toLowerCase(Locale.ROOT).contains(normalizedSearch)) {
+                    rowMatches = true;
+                }
+                cells.add(new TranslationGridCell(
+                        locale.id(),
+                        locale.languageTag(),
+                        locale.nativeName(),
+                        value,
+                        overridden));
+            }
+            if (rowMatches) {
+                matches.add(new TranslationGridRow(key, List.copyOf(cells)));
             }
         }
 
-        int page = Math.max(0, requestedPage);
-        PageRequest pageable = PageRequest.of(page, pageSize);
+        int safePageSize = Math.max(1, pageSize);
+        int lastPage = matches.isEmpty() ? 0 : (matches.size() - 1) / safePageSize;
+        int page = Math.min(Math.max(0, requestedPage), lastPage);
+        PageRequest pageable = PageRequest.of(page, safePageSize);
         int fromIndex = (int) Math.min(pageable.getOffset(), matches.size());
-        int toIndex = Math.min(fromIndex + pageSize, matches.size());
+        int toIndex = Math.min(fromIndex + safePageSize, matches.size());
         return new PageImpl<>(matches.subList(fromIndex, toIndex), pageable, matches.size());
     }
 
     @Transactional(readOnly = true)
-    public LocalizedMessageForm formFor(Long localeId, String messageKey) {
-        SupportedLocale locale = findLocale(localeId);
-        LocalizedMessageForm form = new LocalizedMessageForm();
-        if (messageKey == null || messageKey.isBlank()) {
-            return form;
-        }
-        String normalizedKey = validateMessageKey(messageKey);
-        String value = messageRepository.findByLocaleIdAndMessageKey(localeId, normalizedKey)
-                .map(LocalizedMessage::getMessageValue)
-                .orElseGet(() -> messageSource.getMessage(
-                        normalizedKey,
-                        null,
-                        normalizedKey,
-                        locale.toLocale()));
-        form.setMessageKey(normalizedKey);
-        form.setMessageValue(value);
-        return form;
+    public List<TranslationGridCell> emptyCells(List<SupportedLocaleSummary> locales) {
+        return locales.stream()
+                .map(locale -> new TranslationGridCell(
+                        locale.id(),
+                        locale.languageTag(),
+                        locale.nativeName(),
+                        "",
+                        false))
+                .toList();
     }
 
     @Transactional
-    public LocalizedMessageSummary save(Long localeId, LocalizedMessageForm form) {
-        SupportedLocale locale = findLocale(localeId);
-        String messageKey = validateMessageKey(form.getMessageKey());
-        String messageValue = validateMessageValue(form.getMessageValue(), locale.toLocale());
+    public TranslationRowUpdateResult saveRow(TranslationGridRowForm form) {
+        String messageKey = validateMessageKey(form == null ? null : form.getMessageKey());
+        Map<Long, String> submittedValues = form == null ? Map.of() : form.getValues();
+        if (submittedValues == null || submittedValues.isEmpty()) {
+            throw new LocalizationOperationException("localization.error.atLeastOneTranslation");
+        }
+
+        List<SupportedLocale> locales = localeRepository.findAllByOrderByDisplayOrderAscIdAsc();
+        Map<Long, SupportedLocale> localesById = locales.stream()
+                .collect(Collectors.toMap(SupportedLocale::getId, Function.identity()));
+        if (submittedValues.keySet().stream()
+                .anyMatch(localeId -> localeId == null || !localesById.containsKey(localeId))) {
+            throw new LocalizationOperationException("localization.error.notFound");
+        }
+
+        Map<Long, LocalizedMessage> existingByLocale =
+                messageRepository.findAllByMessageKey(messageKey).stream()
+                        .collect(Collectors.toMap(
+                                message -> message.getLocale().getId(),
+                                Function.identity()));
+        Map<Long, String> normalizedValues = new LinkedHashMap<>();
+        boolean hasCustomValue = false;
+        for (Map.Entry<Long, String> entry : submittedValues.entrySet()) {
+            SupportedLocale locale = localesById.get(entry.getKey());
+            String value = normalizeMessageValue(entry.getValue());
+            String bundleValue = messageSource
+                    .resolveBundle(messageKey, locale.toLocale())
+                    .orElse("");
+            if (!value.isBlank() && !value.equals(bundleValue)) {
+                validateMessageValue(value, locale.toLocale());
+                hasCustomValue = true;
+            }
+            normalizedValues.put(entry.getKey(), value);
+        }
+
+        boolean knownMessageKey = messageKeyCatalog.keys().contains(messageKey)
+                || !existingByLocale.isEmpty();
+        if (!knownMessageKey && !hasCustomValue) {
+            throw new LocalizationOperationException("localization.error.atLeastOneTranslation");
+        }
+
+        int updatedCount = 0;
+        int restoredCount = 0;
         try {
-            LocalizedMessage message = messageRepository.findByLocaleIdAndMessageKey(localeId, messageKey)
-                    .orElseGet(() -> LocalizedMessage.create(
+            for (Map.Entry<Long, String> entry : normalizedValues.entrySet()) {
+                SupportedLocale locale = localesById.get(entry.getKey());
+                String value = entry.getValue();
+                String bundleValue = messageSource
+                        .resolveBundle(messageKey, locale.toLocale())
+                        .orElse("");
+                LocalizedMessage existing = existingByLocale.get(entry.getKey());
+                if (value.isBlank() || value.equals(bundleValue)) {
+                    if (existing != null) {
+                        messageRepository.delete(existing);
+                        restoredCount++;
+                    }
+                    continue;
+                }
+                if (existing == null) {
+                    messageRepository.save(LocalizedMessage.create(
                             locale,
                             messageKey,
-                            messageValue,
+                            value,
                             clock.instant()));
-            if (message.getId() != null) {
-                message.update(messageValue, clock.instant());
+                    updatedCount++;
+                } else if (!existing.getMessageValue().equals(value)) {
+                    existing.update(value, clock.instant());
+                    updatedCount++;
+                }
             }
-            LocalizedMessage saved = messageRepository.saveAndFlush(message);
-            clearMessageCacheAfterCommit();
-            return new LocalizedMessageSummary(saved.getMessageKey(), saved.getMessageValue(), true);
+            if (updatedCount > 0 || restoredCount > 0) {
+                messageRepository.flush();
+                clearMessageCacheAfterCommit();
+            }
+            return new TranslationRowUpdateResult(messageKey, updatedCount, restoredCount);
         } catch (DataIntegrityViolationException exception) {
             throw new LocalizationOperationException("localization.error.invalidStoredValue", exception);
         }
-    }
-
-    @Transactional
-    public void delete(Long localeId, String messageKey) {
-        findLocale(localeId);
-        String normalizedKey = validateMessageKey(messageKey);
-        LocalizedMessage message = messageRepository.findByLocaleIdAndMessageKey(localeId, normalizedKey)
-                .orElseThrow(() -> new LocalizationOperationException("localization.error.messageNotFound"));
-        messageRepository.delete(message);
-        messageRepository.flush();
-        clearMessageCacheAfterCommit();
-    }
-
-    private SupportedLocale findLocale(Long localeId) {
-        return localeRepository.findById(localeId)
-                .orElseThrow(() -> new LocalizationOperationException("localization.error.notFound"));
     }
 
     private String validateMessageKey(String candidate) {
@@ -153,11 +205,11 @@ public class TranslationCatalogService {
         return messageKey;
     }
 
-    private String validateMessageValue(String candidate, Locale locale) {
-        String messageValue = candidate == null ? "" : candidate.strip();
-        if (messageValue.isBlank()) {
-            throw new LocalizationOperationException("localization.error.blankMessage");
-        }
+    private String normalizeMessageValue(String candidate) {
+        return candidate == null ? "" : candidate.strip();
+    }
+
+    private void validateMessageValue(String messageValue, Locale locale) {
         if (messageValue.length() > MESSAGE_VALUE_MAX_LENGTH) {
             throw new LocalizationOperationException("localization.error.invalidStoredValue");
         }
@@ -177,7 +229,6 @@ public class TranslationCatalogService {
         } catch (IllegalArgumentException exception) {
             throw new LocalizationOperationException("localization.error.invalidPattern", exception);
         }
-        return messageValue;
     }
 
     private String normalizeSearch(String search) {
@@ -194,11 +245,11 @@ public class TranslationCatalogService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    databaseMessageSource.clearCache();
+                    messageSource.clearCache();
                 }
             });
         } else {
-            databaseMessageSource.clearCache();
+            messageSource.clearCache();
         }
     }
 }

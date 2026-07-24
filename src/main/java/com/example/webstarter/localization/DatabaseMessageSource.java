@@ -9,17 +9,21 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.MessageSource;
 import org.springframework.context.support.AbstractMessageSource;
 
 public class DatabaseMessageSource extends AbstractMessageSource {
 
     private final ObjectProvider<LocalizedMessageRepository> repositoryProvider;
+    private final MessageSource bundleMessageSource;
     private final Cache<MessageCacheKey, Optional<String>> cache;
 
     public DatabaseMessageSource(
             ObjectProvider<LocalizedMessageRepository> repositoryProvider,
+            MessageSource bundleMessageSource,
             LocalizationProperties properties) {
         this.repositoryProvider = repositoryProvider;
+        this.bundleMessageSource = bundleMessageSource;
         this.cache = Caffeine.newBuilder()
                 .maximumSize(properties.cacheMaxEntries())
                 .expireAfterWrite(properties.cacheTtl())
@@ -40,6 +44,10 @@ public class DatabaseMessageSource extends AbstractMessageSource {
 
     public void clearCache() {
         cache.invalidateAll();
+    }
+
+    public Optional<String> resolveBundle(String code, Locale locale) {
+        return Optional.ofNullable(bundleMessageSource.getMessage(code, null, null, locale));
     }
 
     private Optional<String> resolveOverride(String code, Locale locale) {

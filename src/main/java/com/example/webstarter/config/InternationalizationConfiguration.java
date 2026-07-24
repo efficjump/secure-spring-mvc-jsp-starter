@@ -53,7 +53,7 @@ public class InternationalizationConfiguration {
         bundleMessageSource.setDefaultLocale(properties.defaultLocale());
 
         DatabaseMessageSource databaseMessageSource =
-                new DatabaseMessageSource(repositoryProvider, properties);
+                new DatabaseMessageSource(repositoryProvider, bundleMessageSource, properties);
         databaseMessageSource.setParentMessageSource(bundleMessageSource);
         return databaseMessageSource;
     }
